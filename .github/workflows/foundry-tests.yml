@@ -1,6 +1,8 @@
-name: test
+name: Foundry tests
 
-on: workflow_dispatch
+on:
+  push:
+    branches: [main]
 
 env:
   FOUNDRY_PROFILE: ci
@@ -30,5 +32,5 @@ jobs:
 
       - name: Run Forge tests
         run: |
-          forge test -vvv
+          forge test -vvv --via-ir
         id: test
