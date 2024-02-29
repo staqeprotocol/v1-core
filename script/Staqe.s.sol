@@ -11,27 +11,27 @@ contract StaqeDeployScript is Script {
     function setUp() public {}
 
     function run() external {
+        address userAddress = vm.envAddress("USER_ADDRESS");
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        
         vm.startBroadcast(deployerPrivateKey);
 
-        address test = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-
         ERC20Mock mockStakeToken = new ERC20Mock();
-        mockStakeToken.mint(test, 1000 ether);
+        mockStakeToken.mint(userAddress, 1000 ether);
         console.log("Stake token:", address(mockStakeToken));
 
         ERC20Mock mockRewardToken = new ERC20Mock();
-        mockRewardToken.mint(test, 1000 ether);
+        mockRewardToken.mint(userAddress, 1000 ether);
         console.log("Reward token:", address(mockRewardToken));
 
         ERC721Mock mockNFT = new ERC721Mock();
-        ERC721Mock(mockNFT).mint(test);
-        ERC721Mock(mockNFT).mint(test);
+        ERC721Mock(mockNFT).mint(userAddress);
+        ERC721Mock(mockNFT).mint(userAddress);
         console.log("Mock NFT:", address(mockNFT));
 
         ERC721Mock genesisNFT = new ERC721Mock();
-        uint256 id = ERC721Mock(genesisNFT).mint(test);
-        ERC721Mock(genesisNFT).mint(test);
+        uint256 id = ERC721Mock(genesisNFT).mint(userAddress);
+        ERC721Mock(genesisNFT).mint(userAddress);
         console.log("Genesis NFT:", address(genesisNFT));
 
         StaqeDeploy staqe = new StaqeDeploy(
