@@ -12,6 +12,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -22,10 +25,6 @@ jobs:
 
       - name: Install Slither
         run: pip install slither-analyzer
-
-      - name: Install Foundry
-        run: |
-          curl -L https://foundry.paradigm.xyz | bash
 
       - name: Run Slither
         run: slither "contracts/StaqeDeploy.sol" --exclude-informational
