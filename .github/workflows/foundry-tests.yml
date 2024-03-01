@@ -25,6 +25,5 @@ jobs:
           version: nightly
 
       - name: Run Forge tests
-        run: |
-          forge test -vvv --via-ir
+        run: forge test -vvv --via-ir --gas-report
         id: test
