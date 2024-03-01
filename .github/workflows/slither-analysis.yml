@@ -23,5 +23,10 @@ jobs:
       - name: Install Slither
         run: pip install slither-analyzer
 
+      - name: Install Foundry
+        run: |
+          curl -L https://foundry.paradigm.xyz | bash
+          source $HOME/.foundry/bin/foundryup
+
       - name: Run Slither
         run: slither "contracts/StaqeDeploy.sol" --exclude-informational
