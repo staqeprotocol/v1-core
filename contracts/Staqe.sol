@@ -272,7 +272,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         }
 
         if (amount <= 0 && id <= 0) {
-            revert InvalidAmount();
+            revert InvalidAmountOrId();
         }
 
         stakeId = _stakes[_msgSender()][poolId].length;

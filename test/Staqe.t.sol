@@ -518,7 +518,7 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         vm.expectRevert(PoolDoesNotExist.selector);
         staqe.stake(100, 100 ether, 0);
 
-        vm.expectRevert(InvalidAmount.selector);
+        vm.expectRevert(InvalidAmountOrId.selector);
         staqe.stake(poolId1, 0, 0);
     }
 

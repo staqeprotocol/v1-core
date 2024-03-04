@@ -11,8 +11,8 @@ contract StaqeDeployScript is Script {
     function setUp() public {}
 
     function run() external {
-        address userAddress = address(1); // vm.envAddress("USER_ADDRESS");
-        uint256 deployerPrivateKey = 0x1; // vm.envUint("PRIVATE_KEY");
+        address userAddress = vm.envAddress("USER_ADDRESS");
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         
         vm.startBroadcast(deployerPrivateKey);
 
@@ -39,11 +39,14 @@ contract StaqeDeployScript is Script {
             genesisNFT,
             IERC20(address(0)),
             address(0),
-            "Genesis"
+            "Genesis Pool"
         );
         console.log("Staqe:", address(staqe));
 
         ERC721Mock(address(genesisNFT)).setApprovalForAll(address(staqe), true);
+
+        console.log(id);
+        
         staqe.stake(0, 0, id);
 
         vm.stopBroadcast();

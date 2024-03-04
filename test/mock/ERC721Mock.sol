@@ -9,7 +9,7 @@ contract ERC721Mock is ERC721 {
     constructor() ERC721("Test", "TST") {}
 
     function mint(address to) public returns (uint256) {
-        _mint(to, ++_tokenIdCounter);
+        _mint(to, ++_tokenIdCounter); // NFT #0 not support for staking
         return _tokenIdCounter;
     }
 }

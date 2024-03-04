@@ -15,7 +15,7 @@ interface IStaqeErrors {
     error InvalidERC721Token();
     error InvalidRewardToken();
     error InvalidMetadata();
-    error InvalidAmount();
+    error InvalidAmountOrId();
     error PoolDoesNotExist();
     error PoolDoesNotHaveStakes();
     error RewardIsEmpty();
