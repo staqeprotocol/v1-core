@@ -7,9 +7,11 @@ import {StaqeDeploy, IERC20, IERC721} from "@staqeprotocol/v1-core/contracts/Sta
 import {ERC20Mock} from "../test/mock/ERC20Mock.sol";
 import {ERC721Mock, IERC165} from "../test/mock/ERC721Mock.sol";
 
+ /**
+  * @dev Genesis Pool block number > 0
+  *      For local: anvil --block-time 10
+ */
 contract StaqeDeployScript is Script {
-    function setUp() public {}
-
     function run() external {
         address userAddress = vm.envAddress("USER_ADDRESS");
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
