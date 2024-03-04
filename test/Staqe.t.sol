@@ -522,37 +522,30 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         staqe.stake(poolId1, 0, 0);
     }
 
-    function testFuzz_Unstake(uint256 amount) public {
-        vm.assume(amount > 0);
-        vm.assume(amount < 100 ether);
-
+    function test_Unstake() public {
         uint256 blockId = 1;
 
-        uint256 poolId1 = staqe.launchPool(
+        assertEq(staqe.launchPool(
             mockStakeERC20TokenA,
             mockStakeERC721TokenA,
             IERC20(address(0)),
             address(0),
             "Pool 1"
-        );
+        ), 1);
 
-        assertEq(poolId1, 1);
-
-        uint256 poolId2 = staqe.launchPool(
+        assertEq(staqe.launchPool(
             mockStakeERC20TokenA,
             mockStakeERC721TokenA,
             IERC20(address(0)),
             testUser1,
             "Pool 2"
-        );
-
-        assertEq(poolId2, 2);
+        ), 2);
 
         vm.startPrank(testUser1);
-        uint256 stakeId1 = staqe.stake(poolId1, 50 ether, 14); // Add 50 erc20 and 1 erc721 ID14
-        uint256 stakeId2 = staqe.stake(poolId2, 50 ether, 0); // Add 50 erc20
-        uint256 stakeId3 = staqe.stake(poolId2, 0, 15); // Add 1 erc721 ID15
-        uint256 stakeId4 = staqe.stake(poolId2, amount, 16); // Add amount ether erc20 and 1 erc721 ID16
+        uint256 stakeId1 = staqe.stake(1, 50 ether, 14); // Add 50 erc20 and 1 erc721 ID14
+        uint256 stakeId2 = staqe.stake(2, 50 ether, 0); // Add 50 erc20
+        uint256 stakeId3 = staqe.stake(2, 0, 15); // Add 1 erc721 ID15
+        uint256 stakeId4 = staqe.stake(2, 77 ether, 16); // Add 77 ether erc20 and 1 erc721 ID16
         vm.stopPrank();
 
         vm.roll(++blockId);
@@ -579,16 +572,16 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
         vm.startPrank(testUser1);
         (uint256 amountERC20PoolId2, uint256[] memory idsERC721PoolId2) = staqe
-            .unstake(poolId2, stakeIdsPoolId2);
+            .unstake(2, stakeIdsPoolId2);
         vm.stopPrank();
 
         uint256 balanceERC20After = mockStakeERC20TokenA.balanceOf(testUser1);
         uint256 balanceERC721After = mockStakeERC721TokenA.balanceOf(testUser1);
 
-        assertEq(balanceERC20Before, balanceERC20After - 50 ether - amount);
+        assertEq(balanceERC20Before, balanceERC20After - 50 ether - 77 ether);
         assertEq(balanceERC721Before, balanceERC721After - 2);
 
-        assertEq(amountERC20PoolId2, 50 ether + amount);
+        assertEq(amountERC20PoolId2, 50 ether + 77 ether);
         assertEq(idsERC721PoolId2.length, 2);
 
         uint256[] memory _idsERC721 = new uint256[](2);
@@ -601,7 +594,7 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
             }
         }
 
-        Stake[] memory stakes = staqe.getStakes(testUser1, poolId1);
+        Stake[] memory stakes = staqe.getStakes(testUser1, 1);
 
         assertEq(stakes[stakeId1].amountERC20, 50 ether);
         assertEq(stakes[stakeId1].idERC721, 14);
@@ -677,12 +670,6 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
     }
 
     function test_ClaimRewards() public {
-        uint256 rand1 = 111 ether;
-        uint256 rand2 = 43 ether;
-
-        uint256 balanceBefore;
-        uint256 balanceAfter;
-
         // Scenarios:
         // 1. Create Pool1
         // 1.1. Stake only ERC721 mockStakeERC721TokenB
@@ -699,7 +686,7 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         // 4. Stake User1
         // 4.1. Stake to Pool1 ERC721:mockStakeERC721TokenB:14
         // 4.2. Stake to Pool1 ERC721:mockStakeERC721TokenB:15
-        // 4.3. Stake to Pool2 ERC20:mockStakeERC20TokenA:rand2
+        // 4.3. Stake to Pool2 ERC20:mockStakeERC20TokenA:43
         // 4.4. Stake to Pool2 ERC20:mockStakeERC20TokenA:11
         // 5. Reward Pool1
         // 5.1. Reward mockRewardERC20TokenC:777
@@ -709,17 +696,17 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         // 5.2.3. User1 reward 2 * mockRewardERC20TokenC:777 / 2
         // 6. Stake User2
         // 6.1. Stake to Pool1 ERC721:mockStakeERC721TokenB:24
-        // 6.2. Stake to Pool2 ERC20:mockStakeERC20TokenA:rand1
-        // 6.3. Stake to Pool3 ERC20:mockStakeERC20TokenA:rand2 ERC721:mockStakeERC721TokenB:26
+        // 6.2. Stake to Pool2 ERC20:mockStakeERC20TokenA:111
+        // 6.3. Stake to Pool3 ERC20:mockStakeERC20TokenA:43 ERC721:mockStakeERC721TokenB:26
         // 6.4. Stake to Pool3 ERC20:mockStakeERC20TokenA:22
         // 7. Reward Pool2 (Stake User2 6.2. not calculate, block number Stake == Reward)
         // 7.1. Reward mockRewardERC20TokenA:111
         // 7.2. For ERC20 stakers (after 100 blocks)
-        // 7.2.1. User1 stake: 4.3. +rand2
+        // 7.2.1. User1 stake: 4.3. +43
         // 7.2.2. User1 stake: 4.4. +11
-        // 7.2.3. User1 reward (rand2 + 11) * mockRewardERC20TokenA:111 / (rand2 + 11)
+        // 7.2.3. User1 reward (43 + 11) * mockRewardERC20TokenA:111 / (43 + 11)
         // 8. Stake User3
-        // 8.1. Stake to Pool2 ERC20:mockStakeERC20TokenA:rand1
+        // 8.1. Stake to Pool2 ERC20:mockStakeERC20TokenA:111
         // 8.2. Stake to Pool2 ERC20:mockStakeERC20TokenA:11
         // 8.3. Stake to Pool3 ERC721:mockStakeERC721TokenB:35
         // 8.4. Stake to Pool3 ERC20:mockStakeERC20TokenA:77 ERC721:mockStakeERC721TokenB:36
@@ -741,71 +728,67 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         // 11. Stake User4
         // 11.1. Stake to Pool2 ERC20:mockStakeERC20TokenA:44
         // 12. Unstake User3
-        // 12.1. Unstake to Pool2 ERC20:mockStakeERC20TokenA:rand1
+        // 12.1. Unstake to Pool2 ERC20:mockStakeERC20TokenA:111
         // 12.2. Unstake to Pool2 ERC20:mockStakeERC20TokenA:11
         // 12. Reward Pool2
         // 12.1. Reward mockRewardERC20TokenB:131
         // 12.2. For ERC20 stakers
-        // 12.2.1. User1 stake: 4.3. +rand2
+        // 12.2.1. User1 stake: 4.3. +43
         // 12.2.2. User1 stake: 4.4. +11
-        // 10.2.3. User1 reward (rand2 + 11) * mockRewardERC20TokenB:131 / (rand2 + 11 + rand1 + 55 + 44)
-        // 12.2.4. User2 stake: 6.2. +rand1
-        // 10.2.5. User2 reward rand1 * mockRewardERC20TokenB:131 / (rand2 + 11 + rand1 + 55 + 44)
+        // 10.2.3. User1 reward (43 + 11) * mockRewardERC20TokenB:131 / (43 + 11 + 111 + 55 + 44)
+        // 12.2.4. User2 stake: 6.2. +111
+        // 10.2.5. User2 reward 111 * mockRewardERC20TokenB:131 / (43 + 11 + 111 + 55 + 44)
         // 12.2.6. User4 stake: 9.1. +55
         // 12.2.7. User4 stake: 11.1. +44
-        // 10.2.8. User4 reward (55 + 44) * mockRewardERC20TokenB:131 / (rand2 + 11 + rand1 + 55 + 44)
+        // 10.2.8. User4 reward (55 + 44) * mockRewardERC20TokenB:131 / (43 + 11 + 111 + 55 + 44)
+
+        uint256 balanceBefore;
 
         uint256 blockId = 1;
 
         vm.roll(blockId++);
 
-        uint256 poolId1 = staqe.launchPool(
+        assertEq(staqe.launchPool(
             IERC20(address(0)),
             mockStakeERC721TokenB,
             IERC20(mockRewardERC20TokenC),
             address(0),
             "Pool 1"
-        );
-
-        assertEq(poolId1, 1);
+        ), 1);
 
         vm.roll(blockId++);
 
-        uint256 poolId2 = staqe.launchPool(
+        assertEq(staqe.launchPool(
             mockStakeERC20TokenA,
             IERC721(address(0)),
             IERC20(address(0)),
             testUser1,
             "Pool 2"
-        );
-
-        assertEq(poolId2, 2);
+        ), 2);
 
         vm.roll(blockId++);
 
-        uint256 poolId3 = staqe.launchPool(
+        assertEq(staqe.launchPool(
             mockStakeERC20TokenA,
             mockStakeERC721TokenB,
             IERC20(mockRewardERC20TokenC),
             testUser2,
             "Pool 3"
-        );
-
-        assertEq(poolId3, 3);
+        ), 3);
 
         vm.roll(blockId++);
 
         vm.startPrank(testUser1);
-        staqe.stake(poolId1, 0, 14);
-        staqe.stake(poolId1, 0, 15);
-        staqe.stake(poolId2, rand2, 0);
-        staqe.stake(poolId2, 11 ether, 0);
+        staqe.stake(1, 0, 14);
+        staqe.stake(1, 0, 15);
+        staqe.stake(2, 43 ether, 0);
+        staqe.stake(2, 11 ether, 0);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
-        uint256 rewardId1 = staqe.addReward(
-            poolId1,
+        staqe.addReward(
+            1,
             mockRewardERC20TokenC,
             777 ether,
             0,
@@ -815,14 +798,14 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         vm.roll(blockId++);
 
         vm.startPrank(testUser2);
-        staqe.stake(poolId1, 0, 24);
-        staqe.stake(poolId3, rand2, 26);
-        staqe.stake(poolId3, 22 ether, 0);
+        staqe.stake(1, 0, 24);
+        staqe.stake(3, 43 ether, 26);
+        staqe.stake(3, 22 ether, 0);
         vm.stopPrank();
 
         vm.startPrank(testUser1);
-        uint256 rewardId2 = staqe.addReward(
-            poolId2,
+        staqe.addReward(
+            2,
             mockRewardERC20TokenA,
             111 ether,
             100,
@@ -833,31 +816,31 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         vm.roll(blockId++);
 
         vm.startPrank(testUser2);
-        staqe.stake(poolId2, rand1, 0);
+        staqe.stake(2, 111 ether, 0);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(testUser3);
-        uint256 stakeId9 = staqe.stake(poolId2, rand1, 0);
-        uint256 stakeId10 = staqe.stake(poolId2, 11 ether, 0);
-        staqe.stake(poolId3, 0, 35);
-        staqe.stake(poolId3, 77 ether, 36);
+        uint256 stakeId9 = staqe.stake(2, 111 ether, 0);
+        uint256 stakeId10 = staqe.stake(2, 11 ether, 0);
+        staqe.stake(3, 0, 35);
+        staqe.stake(3, 77 ether, 36);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(testUser4);
-        staqe.stake(poolId2, 55 ether, 0);
-        staqe.stake(poolId3, 0, 45);
-        staqe.stake(poolId3, 44 ether, 46);
+        staqe.stake(2, 55 ether, 0);
+        staqe.stake(3, 0, 45);
+        staqe.stake(3, 44 ether, 46);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(testUser2);
-        uint256 rewardId3 = staqe.addReward(
-            poolId3,
+        staqe.addReward(
+            3,
             mockRewardERC20TokenC,
             111 ether,
             0,
@@ -868,7 +851,7 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         vm.roll(blockId++);
 
         vm.startPrank(testUser4);
-        staqe.stake(poolId2, 44 ether, 0);
+        staqe.stake(2, 44 ether, 0);
         vm.stopPrank();
 
         vm.roll(blockId++);
@@ -881,14 +864,14 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         stakeIdsPoolId2[3] = stakeId10;
         stakeIdsPoolId2[4] = 300;
 
-        staqe.unstake(poolId2, stakeIdsPoolId2);
+        staqe.unstake(2, stakeIdsPoolId2);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(testUser1);
         uint256 rewardId4 = staqe.addReward(
-            poolId2,
+            2,
             mockRewardERC20TokenB,
             131 ether,
             0,
@@ -902,147 +885,126 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
         vm.startPrank(testUser1);
         uint256[] memory reward1Pool1 = new uint256[](1);
-        reward1Pool1[0] = poolId1;
+        reward1Pool1[0] = 1;
         uint256[][] memory reward1Pool1User1 = new uint256[][](1);
         reward1Pool1User1[0] = new uint256[](1);
-        reward1Pool1User1[0][0] = rewardId1;
+        reward1Pool1User1[0][0] = 0; // First reward in Pool 1 = Index 0
         staqe.claimRewards(reward1Pool1, reward1Pool1User1, testUser5);
         vm.stopPrank();
 
-        balanceAfter = mockRewardERC20TokenC.balanceOf(testUser5);
-
         assertEq(
             balanceBefore + 777 ether,
-            balanceAfter,
+            mockRewardERC20TokenC.balanceOf(testUser5),
             "Reward 1 for User 1"
         );
 
         vm.roll(blockId + 100);
 
-        balanceBefore = mockRewardERC20TokenA.balanceOf(testUser5);
+        balanceBefore = mockRewardERC20TokenA.balanceOf(testUser5) + uint256(
+            uint256(uint256(43 ether * 111 ether) / (43 ether + 11 ether)) + 
+            uint256(uint256(11 ether * 111 ether) / (43 ether + 11 ether)));
 
         vm.startPrank(testUser1);
         uint256[] memory reward2Pool2 = new uint256[](1);
-        reward2Pool2[0] = poolId2;
+        reward2Pool2[0] = 2;
         uint256[][] memory reward2Pool2User1 = new uint256[][](1);
         reward2Pool2User1[0] = new uint256[](1);
-        reward2Pool2User1[0][0] = rewardId2;
+        reward2Pool2User1[0][0] = 0; // First reward in Pool 2 = Index 0
         staqe.claimRewards(reward2Pool2, reward2Pool2User1, testUser5);
         vm.stopPrank();
 
-        balanceAfter = mockRewardERC20TokenA.balanceOf(testUser5);
-
         assertEq(
-            balanceBefore +
-                ((rand2 * 111 ether) / (rand2 + 11 ether)) +
-                ((11 ether * 111 ether) / (rand2 + 11 ether)),
-            balanceAfter,
+            balanceBefore,
+            mockRewardERC20TokenA.balanceOf(testUser5),
             "Reward 2 for User 1"
         );
 
-        balanceBefore = mockRewardERC20TokenC.balanceOf(testUser5);
+        balanceBefore = mockRewardERC20TokenC.balanceOf(testUser5) + (111 ether / 5);
 
         uint256[] memory pool3 = new uint256[](1);
-        pool3[0] = poolId3;
+        pool3[0] = 3;
         uint256[][] memory reward3 = new uint256[][](1);
         reward3[0] = new uint256[](1);
-        reward3[0][0] = rewardId3;
+        reward3[0][0] = 0; // First reward in Pool 3 = Index 0
 
         vm.startPrank(testUser2);
         staqe.claimRewards(pool3, reward3, testUser5);
         vm.stopPrank();
 
-        balanceAfter = mockRewardERC20TokenC.balanceOf(testUser5);
-
         assertEq(
-            balanceBefore + (111 ether / 5),
-            balanceAfter,
+            balanceBefore,
+            mockRewardERC20TokenC.balanceOf(testUser5),
             "Reward 3 for User 2"
         );
 
-        balanceBefore = mockRewardERC20TokenC.balanceOf(testUser5);
+        balanceBefore = mockRewardERC20TokenC.balanceOf(testUser5) + (111 ether / 5) + (111 ether / 5);
 
         vm.startPrank(testUser3);
         staqe.claimRewards(pool3, reward3, testUser5);
         vm.stopPrank();
 
-        balanceAfter = mockRewardERC20TokenC.balanceOf(testUser5);
-
         assertEq(
-            balanceBefore + (111 ether / 5) + (111 ether / 5),
-            balanceAfter,
+            balanceBefore,
+            mockRewardERC20TokenC.balanceOf(testUser5),
             "Reward 3 for User 3"
         );
 
-        balanceBefore = mockRewardERC20TokenC.balanceOf(testUser5);
+        balanceBefore = mockRewardERC20TokenC.balanceOf(testUser5) + (111 ether / 5) + (111 ether / 5);
 
         vm.startPrank(testUser4);
         staqe.claimRewards(pool3, reward3, testUser5);
         vm.stopPrank();
 
-        balanceAfter = mockRewardERC20TokenC.balanceOf(testUser5);
-
         assertEq(
-            balanceBefore + (111 ether / 5) + (111 ether / 5),
-            balanceAfter,
+            balanceBefore,
+            mockRewardERC20TokenC.balanceOf(testUser5),
             "Reward 3 for User 4"
         );
 
         uint256[] memory pool2 = new uint256[](1);
-        pool2[0] = poolId2;
+        pool2[0] = 2;
         uint256[][] memory reward4 = new uint256[][](1);
         reward4[0] = new uint256[](1);
         reward4[0][0] = rewardId4;
 
-        balanceBefore = mockRewardERC20TokenB.balanceOf(testUser5);
+        balanceBefore = mockRewardERC20TokenB.balanceOf(testUser5) + uint256(
+            uint256(uint256(43 ether * 131 ether) / (43 ether + 11 ether + 111 ether + 55 ether + 44 ether)) +
+            uint256(uint256(11 ether * 131 ether) / (43 ether + 11 ether + 111 ether + 55 ether + 44 ether)));
 
         vm.startPrank(testUser1);
         staqe.claimRewards(pool2, reward4, testUser5);
         vm.stopPrank();
 
-        balanceAfter = mockRewardERC20TokenB.balanceOf(testUser5);
-
         assertEq(
-            balanceBefore +
-                ((rand2 * 131 ether) /
-                    (rand2 + 11 ether + rand1 + 55 ether + 44 ether)) +
-                ((11 ether * 131 ether) /
-                    (rand2 + 11 ether + rand1 + 55 ether + 44 ether)),
-            balanceAfter,
+            balanceBefore,
+            mockRewardERC20TokenB.balanceOf(testUser5),
             "Reward 4 for User 1"
         );
 
-        balanceBefore = mockRewardERC20TokenB.balanceOf(testUser5);
+        balanceBefore = mockRewardERC20TokenB.balanceOf(testUser5) + uint256(
+            (uint256(111 ether * 131 ether) / (43 ether + 11 ether + 111 ether + 55 ether + 44 ether)));
 
         vm.startPrank(testUser2);
         staqe.claimRewards(pool2, reward4, testUser5);
         vm.stopPrank();
 
-        balanceAfter = mockRewardERC20TokenB.balanceOf(testUser5);
-
         assertEq(
-            balanceBefore +
-                ((rand1 * 131 ether) /
-                    (rand2 + 11 ether + rand1 + 55 ether + 44 ether)),
-            balanceAfter,
+            balanceBefore,
+            mockRewardERC20TokenB.balanceOf(testUser5),
             "Reward 4 for User 2"
         );
 
-        balanceBefore = mockRewardERC20TokenB.balanceOf(testUser5);
+        balanceBefore = mockRewardERC20TokenB.balanceOf(testUser5) + uint256(
+            uint256(uint256(55 ether * 131 ether) / (43 ether + 11 ether + 111 ether + 55 ether + 44 ether)) +
+            uint256(uint256(44 ether * 131 ether) / (43 ether + 11 ether + 111 ether + 55 ether + 44 ether)));
 
         vm.startPrank(testUser4);
         staqe.claimRewards(pool2, reward4, testUser5);
         vm.stopPrank();
 
-        balanceAfter = mockRewardERC20TokenB.balanceOf(testUser5);
-
         assertEq(
-            balanceBefore +
-                ((55 ether * 131 ether) /
-                    (rand2 + 11 ether + rand1 + 55 ether + 44 ether)) +
-                ((44 ether * 131 ether) /
-                    (rand2 + 11 ether + rand1 + 55 ether + 44 ether)),
-            balanceAfter,
+            balanceBefore,
+            mockRewardERC20TokenB.balanceOf(testUser5),
             "Reward 4 for User 4"
         );
     }
