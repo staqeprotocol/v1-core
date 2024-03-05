@@ -9,7 +9,14 @@ import {ERC721Mock, IERC165} from "../test/mock/ERC721Mock.sol";
 
  /**
   * @dev Genesis Pool block number > 0
-  *      For local: anvil --block-time 10
+  *      anvil --block-time 10
+  *      sleep 10 && forge script script/Staqe.s.sol --fork-url http://localhost:8545 --broadcast
+  *
+  *      Stake ERC20: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+  *      Stake ERC721: 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+  *      Reward ERC20: 0x0165878A594ca255338adfa4d48449f69242Eb8F
+  *      Genesis NFT: 0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6
+  *      Staqe: 0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e
  */
 contract StaqeDeployScript is Script {
     function run() external {
@@ -20,16 +27,17 @@ contract StaqeDeployScript is Script {
 
         ERC20Mock mockStakeToken = new ERC20Mock();
         mockStakeToken.mint(userAddress, 1000 ether);
-        console.log("Stake token:", address(mockStakeToken));
-
-        ERC20Mock mockRewardToken = new ERC20Mock();
-        mockRewardToken.mint(userAddress, 1000 ether);
-        console.log("Reward token:", address(mockRewardToken));
+        console.log("Stake ERC20:", address(mockStakeToken));
 
         ERC721Mock mockNFT = new ERC721Mock();
         ERC721Mock(mockNFT).mint(userAddress);
         ERC721Mock(mockNFT).mint(userAddress);
-        console.log("Mock NFT:", address(mockNFT));
+        ERC721Mock(mockNFT).mint(userAddress);
+        console.log("Stake ERC721:", address(mockNFT));
+
+        ERC20Mock mockRewardToken = new ERC20Mock();
+        mockRewardToken.mint(userAddress, 1000 ether);
+        console.log("Reward ERC20:", address(mockRewardToken));
 
         ERC721Mock genesisNFT = new ERC721Mock();
         uint256 id = ERC721Mock(genesisNFT).mint(userAddress);
