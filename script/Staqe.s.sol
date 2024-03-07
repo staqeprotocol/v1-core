@@ -54,8 +54,6 @@ contract StaqeDeployScript is Script {
         console.log("Staqe:", address(staqe));
 
         ERC721Mock(address(genesisNFT)).setApprovalForAll(address(staqe), true);
-
-        console.log(id);
         
         staqe.stake(0, 0, id);
 

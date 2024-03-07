@@ -94,18 +94,30 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
     }
 
     /**
-     * @notice Retrieves the amount of rewards claimed by a staker for a specific reward in a pool.
+     * @notice Checks the status of a specific reward for a staker in a pool.
      * @param staker The address of the staker.
      * @param poolId The ID of the pool.
-     * @param rewardId The ID of the reward.
-     * @return _ The amount of claimed rewards.
+     * @param rewardId The ID of the reward within the pool.
+     * @return token The ERC20 token address of the reward.
+     * @return amount The amount of the reward.
+     * @return claimed True if the reward has already been claimed, false otherwise.
      */
-    function getClaimedAmount(
+    function checkRewardStatus(
         address staker,
         uint256 poolId,
         uint256 rewardId
-    ) public view virtual returns (uint256) {
-        return _claimedAmount[staker][poolId][rewardId];
+    ) public view virtual returns (IERC20 token, uint256 amount, bool claimed) {
+        try this.calculateReward(staker, poolId, rewardId) returns (IERC20 _token, uint256 _amount) {
+            token = _token;
+            amount = _amount;
+            claimed = false;
+        } catch {
+            if (_isClaimed(staker, poolId, rewardId)) {
+                token = IERC20(_rewards[poolId][rewardId].rewardToken);
+                amount = _claimedAmount[staker][poolId][rewardId];
+                claimed = true;
+            }
+        }
     }
 
     /**
@@ -122,7 +134,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         address staker,
         uint256 poolId,
         uint256 rewardId
-    ) public view virtual returns (IERC20, uint256) {
+    ) external view returns (IERC20, uint256) {
         return _calculateReward(staker, poolId, rewardId);
     }
 
@@ -151,21 +163,6 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         uint256 poolId
     ) public view virtual returns (bool) {
         return _isActiveStaker(staker, poolId);
-    }
-
-    /**
-     * @notice Determines if a reward is claimed by a staker in a pool.
-     * @param staker Address of the staker.
-     * @param poolId ID of the pool.
-     * @param rewardId ID of the reward.
-     * @return _ Indicates claim status.
-     */
-    function isClaimed(
-        address staker,
-        uint256 poolId,
-        uint256 rewardId
-    ) public view virtual returns (bool) {
-        return _isClaimed(staker, poolId, rewardId);
     }
 
     /**
@@ -435,6 +432,10 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         nonReentrant
         returns (IERC20[][] memory tokens, uint256[][] memory amounts)
     {
+        if (recipient == address(0)) {
+            recipient = _msgSender();
+        }
+
         tokens = new IERC20[][](poolIds.length);
         amounts = new uint256[][](poolIds.length);
 
@@ -461,6 +462,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
                 for (uint256 j = 0; j < amounts[i].length; j++) {
                     total += amounts[i][j];
                 }
+                if (total <= 0) revert RewardIsEmpty();
                 // slither-disable-next-line calls-loop
                 if (!t.transfer(recipient, total)) {
                     revert RewardTransferFailed();
@@ -468,6 +470,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
                 emit RewardClaimed(_msgSender(), poolIds[i], 0, t, total);
             } else {
                 for (uint256 j = 0; j < tokens[i].length; j++) {
+                    if (amounts[i][j] <= 0) revert RewardIsEmpty();
                     // slither-disable-next-line calls-loop
                     if (!tokens[i][j].transfer(recipient, amounts[i][j])) {
                         revert RewardTransferFailed();
