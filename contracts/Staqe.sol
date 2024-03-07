@@ -107,6 +107,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         uint256 poolId,
         uint256 rewardId
     ) public view virtual returns (IERC20 token, uint256 amount, bool claimed) {
+        // slither-disable-next-line calls-loop
         try this.calculateReward(staker, poolId, rewardId) returns (IERC20 _token, uint256 _amount) {
             token = _token;
             amount = _amount;
