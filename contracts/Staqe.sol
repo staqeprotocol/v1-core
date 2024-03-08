@@ -70,6 +70,31 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
     }
 
     /**
+     * @notice Retrieves the total number of rewards for a specified pool.
+     * @param poolId The identifier of the pool.
+     * @return uint256 The total number of rewards in the pool.
+     */
+    function getTotalRewards(uint256 poolId) public view virtual returns (uint256) {
+        return _rewards[poolId].length;
+    }
+
+    /**
+     * @notice Fetches details of a specific reward in a pool.
+     * @param poolId The ID of the pool to query.
+     * @param rewardId The ID of the reward within the pool to retrieve.
+     * @return rewardDetails The reward details.
+     */
+    function getReward(
+        uint256 poolId,
+        uint256 rewardId
+    ) public view virtual returns (Reward memory rewardDetails) {
+        if (rewardId < getTotalRewards(poolId)) {
+            rewardDetails = _rewards[poolId][rewardId];
+        }
+    }
+
+
+    /**
      * @notice Retrieves rewards associated with a specific pool.
      * @param poolId The ID of the pool.
      * @return _ An array of rewards for the specified pool.
@@ -78,6 +103,36 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         uint256 poolId
     ) public view virtual returns (Reward[] memory) {
         return _rewards[poolId];
+    }
+
+    /**
+     * @notice Gets the total number of stakes a user has in a specific pool.
+     * @param staker The address of the staker.
+     * @param poolId The ID of the pool.
+     * @return _ The total number of stakes the user has in the pool.
+     */
+    function getTotalStakes(
+        address staker,
+        uint256 poolId
+    ) public view virtual returns (uint256) {
+        return _stakes[staker][poolId].length;
+    }
+
+    /**
+     * @notice Retrieves details of a specific stake a user has in a pool.
+     * @param staker The address of the staker.
+     * @param poolId The ID of the pool.
+     * @param stakeId The ID of the specific stake within the pool.
+     * @return stakeDetails The stake details.
+     */
+    function getStake(
+        address staker,
+        uint256 poolId,
+        uint256 stakeId
+    ) public view virtual returns (Stake memory stakeDetails) {
+        if (stakeId < getTotalStakes(staker, poolId)) {
+            stakeDetails = _stakes[staker][poolId][stakeId];
+        }
     }
 
     /**
