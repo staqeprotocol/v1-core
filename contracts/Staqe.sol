@@ -93,7 +93,6 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         }
     }
 
-
     /**
      * @notice Retrieves rewards associated with a specific pool.
      * @param poolId The ID of the pool.
