@@ -94,6 +94,47 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
     }
 
     /**
+     * @notice Calculates and retrieves reward details for a specific staker in a particular pool.
+     * @param staker The address of the staker for whom the reward details are being fetched.
+     * @param poolId The ID of the pool from which to fetch the reward details.
+     * @param rewardId The ID of the specific reward within the pool.
+     * @return rewardDetails A `RewardFor` struct containing detailed information about the staker's reward.
+     *         This includes whether the reward is for stakers, the reward token, the reward amount,
+     *         the amount specific to the staker, the total staked amount, the number of blocks to claim after,
+     *         the reward block, and whether the reward has been claimed.
+     */
+    function getRewardFor(
+        address staker,
+        uint256 poolId,
+        uint256 rewardId
+    ) public view virtual returns (RewardFor memory rewardDetails) {
+        Reward memory reward = getReward(poolId, rewardId);
+
+        uint256 stakerAmount = 0;
+        bool claimed = false;
+
+        try this.calculateReward(staker, poolId, rewardId) returns (IERC20, uint256 _amount) {
+            stakerAmount = _amount;
+        } catch {
+            if (_isClaimed(staker, poolId, rewardId)) {
+                stakerAmount = _claimedAmount[staker][poolId][rewardId];
+                claimed = true;
+            }
+        }
+
+        rewardDetails = RewardFor({
+            isForERC721Stakers: reward.isForERC721Stakers,
+            rewardToken: reward.rewardToken,
+            rewardAmount: reward.rewardAmount,
+            stakerAmount: stakerAmount,
+            totalStaked: reward.totalStaked,
+            claimAfterBlocks: reward.claimAfterBlocks,
+            rewardBlock: reward.rewardBlock,
+            claimed: claimed
+        });
+    }
+
+    /**
      * @notice Retrieves rewards associated with a specific pool.
      * @param poolId The ID of the pool.
      * @return _ An array of rewards for the specified pool.
@@ -145,34 +186,6 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         uint256 poolId
     ) public view virtual returns (Stake[] memory) {
         return _stakes[staker][poolId];
-    }
-
-    /**
-     * @notice Checks the status of a specific reward for a staker in a pool.
-     * @param staker The address of the staker.
-     * @param poolId The ID of the pool.
-     * @param rewardId The ID of the reward within the pool.
-     * @return token The ERC20 token address of the reward.
-     * @return amount The amount of the reward.
-     * @return claimed True if the reward has already been claimed, false otherwise.
-     */
-    function checkRewardStatus(
-        address staker,
-        uint256 poolId,
-        uint256 rewardId
-    ) public view virtual returns (IERC20 token, uint256 amount, bool claimed) {
-        // slither-disable-next-line calls-loop
-        try this.calculateReward(staker, poolId, rewardId) returns (IERC20 _token, uint256 _amount) {
-            token = _token;
-            amount = _amount;
-            claimed = false;
-        } catch {
-            if (_isClaimed(staker, poolId, rewardId)) {
-                token = IERC20(_rewards[poolId][rewardId].rewardToken);
-                amount = _claimedAmount[staker][poolId][rewardId];
-                claimed = true;
-            }
-        }
     }
 
     /**
@@ -463,7 +476,6 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
             for (uint256 i = 0; i < allERC721.length; i++) {
                 if (allERC721[i] <= 0) continue;
                 idsERC721[--countERC721] = allERC721[i];
-                // slither-disable-next-line calls-loop
                 pool.stakeERC721.safeTransferFrom(
                     address(this),
                     _msgSender(),
@@ -518,7 +530,6 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
                     total += amounts[i][j];
                 }
                 if (total <= 0) revert RewardIsEmpty();
-                // slither-disable-next-line calls-loop
                 if (!t.transfer(recipient, total)) {
                     revert RewardTransferFailed();
                 }
@@ -526,7 +537,6 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
             } else {
                 for (uint256 j = 0; j < tokens[i].length; j++) {
                     if (amounts[i][j] <= 0) revert RewardIsEmpty();
-                    // slither-disable-next-line calls-loop
                     if (!tokens[i][j].transfer(recipient, amounts[i][j])) {
                         revert RewardTransferFailed();
                     }

@@ -34,6 +34,17 @@ interface IStaqeStructs {
         uint256 rewardBlock;
     }
 
+    struct RewardFor {
+        bool isForERC721Stakers;
+        IERC20 rewardToken;
+        uint256 rewardAmount;
+        uint256 stakerAmount;
+        uint256 totalStaked;
+        uint256 claimAfterBlocks;
+        uint256 rewardBlock;
+        bool claimed;
+    }
+
     struct Stake {
         uint256 amountERC20;
         uint256 idERC721;
