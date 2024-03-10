@@ -18,53 +18,65 @@ import {IStaqeStructs} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqeS
  *                   |_|
  *
  * @title Staqe
- * @dev This contract offers a robust platform for decentralized finance (DeFi) applications,
- * focusing on staking mechanisms. It facilitates the creation and management of multiple
- * staking pools, each with unique staking criteria, rewards, and durations. Users can engage
- * in staking activities, claim rewards based on their contributions, and manage their stakes
- * across various pools. The contract is designed with flexibility in mind, allowing for the
- * addition, modification, and querying of pools and stakes.
+ * @dev This contract implements a flexible staking system where users can stake ERC20 or ERC721 tokens
+ * in various pools to earn rewards in the form of ERC20 tokens. The contract supports the creation and 
+ * management of multiple staking pools, each with its own configuration for staked tokens and rewards.
+ * Users can stake and unstake their tokens at any time, subject to the rules of each pool, and claim
+ * their earned rewards after a specified number of blocks.
+ *
+ * The contract extends OpenZeppelin's ReentrancyGuard to prevent reentrant calls, and Context to provide
+ * information about the transaction's context. It implements the IStaqe interface, which defines the core
+ * functionality for staking, unstaking, reward management, and pool configuration.
  *
  * Key Features:
- * - **Dynamic Staking Pools**: Supports the creation of multiple staking pools, each with its
- *   own set of rules and rewards, allowing for a diverse range of staking opportunities.
- * - **Stake Management**: Users can stake tokens, unstake tokens, and claim rewards, with the
- *   contract handling the calculation and distribution of rewards based on predefined pool rules.
- * - **Transparency and Security**: Implements secure and transparent staking processes, ensuring
- *   users have clear insights into their staking positions and rewards.
- * - **ERC-721 Support**: Includes compatibility with ERC-721 tokens, enabling staking functionalities
- *   for NFT assets alongside traditional ERC-20 tokens.
+ * - Create and manage multiple staking pools with different configurations.
+ * - Stake ERC20 or ERC721 tokens to participate in earning rewards.
+ * - Configure rewards in ERC20 tokens for each staking pool.
+ * - Claim rewards after a specified number of blocks, enforcing a minimum staking period.
+ * - Flexible design allowing for various staking and reward strategies.
  *
- * The contract is structured to provide a comprehensive staking solution for the DeFi sector,
- * catering to both ERC-20 and ERC-721 assets. It aims to offer a user-friendly interface for
- * staking, while ensuring the security and integrity of the staking process.
+ * The contract is designed to be versatile and adaptable, supporting a wide range of staking and reward
+ * mechanisms to accommodate different types of staking assets and reward distributions.
  */
 interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
     /**
-     * @notice Launches a new staking pool with specified configurations.
-     * @dev This function emits a `PoolLaunched` event upon successful creation of a pool.
-     *      It uses a non-reentrant modifier to prevent reentrancy attacks during execution.
-     *      The function validates the staking tokens and metadata before creating the pool.
-     *      At least one staking token (ERC20 or ERC721) must be specified.
-     *      `metadata` is expected to be an IPFS CID encoded in bytes32, representing a JSON object
-     *      associated with this pool.
-     * @param stakeERC20 The ERC20 token address that will be staked in this pool. If `address(0)`,
-     *                   indicates that no ERC20 staking is required, but `stakeERC721` must not be `address(0)`.
-     * @param stakeERC721 The ERC721 token address that will be staked in this pool. If `address(0)`,
-     *                    indicates that no ERC721 staking is required, but `stakeERC20` must not be `address(0)`.
-     * @param rewardToken The ERC20 token address that will be used as a reward in this pool. If `address(0)`,
-     *                    rewards can be in any token, allowing for flexible reward schemes.
-     * @param rewarder The address responsible for providing rewards to the pool. If `address(0)`,
-     *                 any user can add rewards to the pool, enabling a decentralized reward mechanism.
-     * @param metadata Arbitrary data to be associated with this pool, encoded in bytes32. This is expected
-     *                 to be an IPFS CID representing a JSON object that contains additional information
-     *                 about the pool.
-     * @return poolId The unique identifier of the newly created staking pool.
-     * @custom:error InvalidERC721Token Reverts if the provided ERC721 address is not a valid ERC721 token.
-     * @custom:error InvalidStakeToken Reverts if both stakeERC20 and stakeERC721 addresses are zero,
-     *               indicating no staking token was provided.
-     * @custom:error InvalidMetadata Reverts if the provided metadata is empty (bytes32(0)),
-     *               indicating that necessary pool information is missing.
+     * @dev Launches a new staking pool with specified parameters.
+     * This function allows the contract caller to create a new staking pool where users can 
+     * stake specific ERC20 or ERC721 tokens to earn rewards.
+     *
+     * Emits a {IStaqeEvents-PoolLaunched} event.
+     *
+     * Requirements:
+     * - The caller must have certain privileges, typically being an admin or contract owner.
+     * - `stakeERC20` and `stakeERC721` cannot both be zero addresses; at least one valid 
+     *   token address must be provided.
+     * - `rewardToken` must be a valid ERC20 token address that will be used for distributing 
+     *   rewards.
+     * - `rewarder` is the address authorized to manage rewards for the pool, often the same 
+     *   as the caller or a dedicated rewards manager.
+     * - `metadata` is field that can be used to store additional information 
+     *   about the pool, encoded in bytes32.
+     *
+     * @param stakeERC20 The ERC20 token address that users will stake in this pool. Can be 
+     * the zero address if the pool is for ERC721 staking.
+     * @param stakeERC721 The ERC721 token address that users will stake in this pool. Can be 
+     * the zero address if the pool is for ERC20 staking.
+     * @param rewardToken The ERC20 token address that will be used to distribute rewards to 
+     * stakers.
+     * @param rewarder The address with the authority to manage and distribute rewards for 
+     * this pool.
+     * @param metadata Metadata providing additional information about the pool, 
+     * encoded as bytes32.
+     *
+     * @return poolId The ID of the newly created staking pool, which can be used to interact 
+     * with the pool in future transactions.
+     *
+     * @custom:error InvalidStakeToken Indicates that the provided ERC20 or ERC721 token 
+     * address is invalid.
+     * @custom:error InvalidRewardToken Indicates that the provided reward token address is 
+     * invalid.
+     * @custom:error OnlyAvailableToStakersInGenesis Indicates that the function is only 
+     * callable by users who are stakers in the genesis pool.
      */
     function launchPool(
         IERC20 stakeERC20,
@@ -75,45 +87,57 @@ interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
     ) external returns (uint256 poolId);
 
     /**
-     * @notice Edits the metadata of an existing staking pool.
-     * @dev This function allows the pool's rewarder to update the pool's metadata. It emits a `PoolEdited`
-     *      event upon success. The function is protected against reentrancy attacks. It requires the caller
-     *      to be the rewarder of the pool with a non-zero address and does not allow setting the metadata
-     *      to its current value or to an empty value (bytes32(0)). This restriction ensures that changes
-     *      are meaningful and prevent accidental erasure of metadata.
-     * @param poolId The unique identifier of the pool whose metadata is to be edited.
-     * @param metadata The new metadata for the pool, encoded in bytes32. This is expected to be
-     *                 an IPFS CID representing a JSON object that contains additional information about
-     *                 the pool. The function rejects empty metadata.
-     * @custom:error PoolDoesNotExist Reverts if the specified pool ID does not correspond to an existing
-     *               pool, indicated by a `launchBlock` of zero.
-     * @custom:error InvalidMetadata Reverts if the new metadata is either empty or matches the current
-     *               metadata of the pool, indicating no change.
-     * @custom:error OnlyRewinderHasAccessToEditMetadata Reverts if the caller is not the rewarder of the
-     *               pool or if the rewarder's address is zero. This ensures that only the designated rewarder
-     *               can edit pool metadata.
-     */
+    * @dev Edits the metadata of an existing staking pool.
+    * This function allows the pool's rewarder to update the pool's metadata post-creation.
+    * Only the rewarder address associated with the pool has the authority to make this change.
+    *
+    * Emits a {IStaqeEvents-PoolEdited} event when the metadata is successfully updated.
+    *
+    * Requirements:
+    * - The pool specified by `poolId` must exist.
+    * - The caller must be the rewarder of the pool.
+    * - The new `metadata` must be different from the existing metadata and cannot be empty.
+    *
+    * @param poolId The ID of the pool whose metadata is being updated.
+    * @param metadata The new metadata for the pool, encoded as bytes32. It must be different 
+    * from the current metadata and cannot be the zero bytes.
+    *
+    * @custom:error PoolDoesNotExist Indicates that the specified pool does not exist.
+    * @custom:error OnlyRewinderHasAccessToEditMetadata Indicates that only the rewarder 
+    * associated with the pool can edit its metadata.
+    * @custom:error InvalidMetadata Indicates that the provided metadata is invalid (e.g., 
+    * empty or the same as the current metadata).
+    */
     function editPool(uint256 poolId, bytes32 metadata) external;
 
     /**
-     * @notice Allows users to stake ERC20 tokens or ERC721 tokens into a specified pool.
-     * @dev This function enables staking of either ERC20 or ERC721 tokens based on the parameters provided.
-     *      It is protected against reentrancy attacks. The function calculates the new stake ID as the length
-     *      of the staker's existing stakes in the pool, adjusts the pool's total staked tokens accordingly,
-     *      and records the new stake. It requires that the pool exists and that the staked amount (for ERC20)
-     *      or the staked token ID (for ERC721) is valid. Transfers the staked tokens from the caller to this
-     *      contract. Emits a `StakeCreated` event upon success.
-     * @param poolId The unique identifier of the pool in which to stake tokens.
-     * @param amount The amount of ERC20 tokens to stake. This parameter is ignored if `id` is specified for
-     *               an ERC721 token stake. Must be greater than zero for ERC20 staking.
-     * @param id The ID of the ERC721 token to stake. This parameter is ignored if `amount` is specified for
-     *           an ERC20 token stake. Must be a valid token ID for ERC721 staking.
-     * @return stakeId The unique identifier for the newly created stake within the pool.
-     * @custom:error PoolDoesNotExist Reverts if the specified pool ID does not correspond to an existing pool.
-     * @custom:error InvalidAmount Reverts if both `amount` and `id` are zero or less,
-     *               indicating that no valid stake has been specified.
-     * @custom:error StakeTransferFailed Reverts if the transfer of ERC20 tokens from the staker to the contract fails.
-     */
+    * @dev Allows a user to stake ERC20 or ERC721 tokens into a specified pool.
+    * This function records the user's stake in the pool, updating the pool's total staked 
+    * amounts and the user's staking details. Users can stake either ERC20 or ERC721 tokens, 
+    * but not both at the same time.
+    *
+    * Emits a {IStaqeEvents-StakeCreated} event when the stake is successfully created.
+    *
+    * Requirements:
+    * - The pool specified by `poolId` must exist.
+    * - At least one of `amount` or `id` must be non-zero, corresponding to the type of token 
+    * being staked (ERC20 or ERC721, respectively).
+    * - If staking ERC20 tokens, `amount` must be greater than zero and the user must have 
+    * enough balance and allowance.
+    * - If staking an ERC721 token, `id` must be a valid token ID owned by the caller.
+    *
+    * @param poolId The ID of the pool where the tokens are being staked.
+    * @param amount The amount of ERC20 tokens to stake. Should be zero if staking an ERC721 token.
+    * @param id The ID of the ERC721 token to stake. Should be zero if staking ERC20 tokens.
+    *
+    * @return stakeId The ID of the newly created stake record.
+    *
+    * @custom:error PoolDoesNotExist Indicates that the specified pool does not exist.
+    * @custom:error InvalidAmountOrId Indicates that both `amount` and `id` are zero, or their 
+    * values are not consistent with the token type expected by the pool.
+    * @custom:error StakeTransferFailed Indicates that the transfer of tokens to the contract 
+    * failed, which could be due to insufficient balance or allowance.
+    */
     function stake(
         uint256 poolId,
         uint256 amount,
@@ -121,32 +145,38 @@ interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
     ) external returns (uint256 stakeId);
 
     /**
-     * @notice Adds a reward to a specified pool, which can be claimed by stakers after a
-     *         set number of blocks.
-     * @dev This function allows adding rewards to a pool, with the option to specify whether
-     *      the reward is for ERC721 stakers or ERC20 stakers within the pool. It validates
-     *      the existence of the pool, the validity of the reward token, and the reward amount.
-     *      The function also checks if the caller is authorized as the rewarder for the pool and ensures
-     *      there are eligible stakers in the pool. The reward is recorded, and the reward tokens
-     *      are transferred from the caller to this contract. Emits a `RewardAdded` event upon successful
-     *      addition of the reward.
-     * @param poolId The unique identifier of the pool to which the reward is being added.
-     * @param rewardToken The ERC20 token used as the reward.
-     * @param rewardAmount The amount of reward tokens being added.
-     * @param claimAfterBlocks The number of blocks after which the reward can be claimed.
-     * @param isForERC721Stakers A boolean flag indicating whether the reward is designated
-     *                           for ERC721 stakers (true) or ERC20 stakers (false).
-     * @return rewardId The unique identifier for the newly added reward within the pool.
-     * @custom:error PoolDoesNotExist Reverts if the specified pool ID does not correspond to an existing pool.
-     * @custom:error InvalidRewardToken Reverts if the reward token address is zero.
-     * @custom:error RewardIsEmpty Reverts if the reward amount is zero or less.
-     * @custom:error OnlyRewinderHasAccessToAddRewards Reverts if the caller is not the designated
-     *               rewarder for the pool or if the pool does not have a designated rewarder.
-     * @custom:error PoolDoesNotHaveStakes Reverts if the pool has no eligible stakes for the type
-     *               of stakers specified by `isForERC721Stakers`.
-     * @custom:error RewardTransferFailed Reverts if the transfer of reward tokens from the caller to
-     *               the contract fails.
-     */
+    * @dev Adds a reward to a specified pool, enabling stakers to earn additional tokens.
+    * This function allows the pool's rewarder to allocate a new reward in the form of ERC20 
+    * tokens, which can be claimed by stakers after a certain number of blocks.
+    *
+    * Emits a {IStaqeEvents-RewardAdded} event when the reward is successfully added to the pool.
+    *
+    * Requirements:
+    * - The caller must be the rewarder of the pool.
+    * - The pool specified by `poolId` must exist and have active stakes.
+    * - `rewardToken` must be a valid ERC20 token address.
+    * - `rewardAmount` must be greater than zero and should be meaningful considering the 
+    *   pool's staking context.
+    * - `claimAfterBlocks` specifies the number of blocks to wait before the reward can be 
+    *   claimed, enforcing a minimum staking period.
+    *
+    * @param poolId The ID of the pool to which the reward is being added.
+    * @param rewardToken The ERC20 token address to be used for the reward.
+    * @param rewardAmount The amount of reward tokens to be distributed.
+    * @param claimAfterBlocks The number of blocks to wait before the reward becomes claimable.
+    * @param isForERC721Stakers A boolean indicating whether the reward is for ERC721 stakers 
+    * (true) or ERC20 stakers (false).
+    *
+    * @return rewardId The ID of the newly added reward in the pool.
+    *
+    * @custom:error PoolDoesNotExist Indicates that the specified pool does not exist.
+    * @custom:error OnlyRewinderHasAccessToAddRewards Indicates that only the designated 
+    * rewarder of the pool can add rewards.
+    * @custom:error InvalidRewardToken Indicates that the reward token address is invalid.
+    * @custom:error RewardIsEmpty Indicates that the reward amount is zero or insufficient.
+    * @custom:error PoolDoesNotHaveStakes Indicates that the pool has no active stakes, and 
+    * thus adding a reward is not meaningful.
+    */
     function addReward(
         uint256 poolId,
         IERC20 rewardToken,
@@ -156,25 +186,37 @@ interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
     ) external returns (uint256 rewardId);
 
     /**
-     * @notice Allows a staker to unstake their tokens (ERC20 or ERC721) from a specified pool.
-     * @dev This function facilitates the withdrawal of staked assets from the pool by a user.
-     *      It calculates the total amount of ERC20 tokens and the count of ERC721 tokens to be
-     *      unstaked based on the provided stake IDs, then performs the asset transfer back to
-     *      the staker. It utilizes an internal `_unstake` helper function to process the unstaking
-     *      logic. The function ensures the pool exists and that the staker has stakes to withdraw.
-     *      It reverts on failures related to token transfers or invalid operations. Emits a
-     *      `StakeWithdrawn` event upon successful unstaking.
-     * @param poolId The unique identifier of the pool from which the staker wishes to withdraw their stakes.
-     * @param stakeIds An array of stake identifiers that the staker wishes to withdraw.
-     * @return amountERC20 The total amount of ERC20 tokens being unstaked.
-     * @return idsERC721 An array containing the IDs of the ERC721 tokens being unstaked.
-     * @custom:error UnstakeTransferFailed Reverts if the transfer of staked ERC20 tokens back to the staker fails.
-     * @custom:error PoolDoesNotExist Reverts if the specified pool ID does not correspond to an existing pool.
-     * @custom:error PoolDoesNotHaveStakes Reverts if the staker does not have any stakes in the specified pool or if the
-     *               provided stake IDs array is empty.
-     * @custom:error StakerDoesNotHaveStakesInPool Reverts if the staker does not have any active stakes within the pool
-     *               corresponding to the provided stake IDs.
-     */
+    * @dev Allows a user to unstake previously staked ERC20 or ERC721 tokens from a specified pool.
+    * This function enables users to retrieve their staked tokens, updating the pool's and user's 
+    * staking records accordingly.
+    *
+    * Emits a {IStaqeEvents-StakeWithdrawn} event when the tokens are successfully unstaked.
+    *
+    * Requirements:
+    * - The pool specified by `poolId` must exist.
+    * - The caller must have active stakes in the specified pool.
+    * - `stakeIds` array should contain valid stake IDs corresponding to the user's stakes.
+    * - Users can only unstake after the reward distribution for their stakes has been resolved.
+    *
+    * @param poolId The ID of the pool from which the tokens are being unstaked.
+    * @param stakeIds An array of stake IDs that the user wishes to unstake. These IDs must 
+    * correspond to the stakes the user has in the pool.
+    *
+    * @return amountERC20 The total amount of ERC20 tokens returned to the user as a result of 
+    * the unstaking.
+    * @return idsERC721 An array of the ERC721 token IDs returned to the user as a result of 
+    * the unstaking.
+    *
+    * @custom:error PoolDoesNotExist Indicates that the specified pool does not exist.
+    * @custom:error PoolDoesNotHaveStakes Indicates that the pool does not have any active 
+    * stakes, or the user does not have any active stakes in the pool.
+    * @custom:error UnstakeTransferFailed Indicates that the transfer of staked tokens back to 
+    * the user failed.
+    * @custom:error UnstakeOnNextBlockAndGetReward Suggests that the user should wait until the 
+    * next block to unstake in order to receive an upcoming reward.
+    * @custom:error StakerDoesNotHaveStakesInPool Indicates that the staker does not have the 
+    * specified stakes in the pool.
+    */
     function unstake(
         uint256 poolId,
         uint256[] calldata stakeIds
@@ -186,29 +228,42 @@ interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
         );
 
     /**
-     * @notice Claims rewards for the caller across multiple pools and specific reward IDs,
-     *         transferring the rewards to a specified recipient.
-     * @dev This function iterates over an array of pool IDs and their corresponding reward IDs
-     *      to calculate and claim rewards for the caller. It supports both ERC20 and potentially
-     *      other types of rewards, aggregating reward amounts and performing token transfers
-     *      in a secure manner to avoid reentrancy issues. The function updates the claimed amounts
-     *      internally to prevent double claiming. Emits a `RewardClaimed` event for each successful reward claim.
-     * @param poolIds An array of pool IDs from which the caller wishes to claim rewards.
-     * @param rewardIds A two-dimensional array corresponding to the `poolIds`, containing arrays of reward IDs
-     *                  to be claimed from each pool.
-     * @param recipient The address to which the claimed rewards will be transferred.
-     * @return tokens A two-dimensional array of tokens corresponding to the claimed rewards for each pool.
-     *                This array mirrors the structure of `poolIds` and `rewardIds`.
-     * @return amounts A two-dimensional array of amounts corresponding to the claimed rewards for each pool.
-     *                 This array mirrors the structure of `poolIds` and `rewardIds`.
-     * @custom:error RewardTransferFailed Reverts if the transfer of rewards to the recipient fails.
-     * @custom:error RewardAlreadyClaimed Reverts if the reward has already been claimed by the caller.
-     * @custom:error RewardIsNotYetAvailableForClaim Reverts if the reward is not yet available for claim
-     *               based on the block number.
-     * @custom:error RewardNotFoundInPool Reverts if the specified reward ID does not exist within the given pool.
-     * @custom:error StakerDoesNotHaveStakesInPool Reverts if the caller does not have any stakes in the specified pool.
-     * @custom:error RewardIsEmpty Reverts if the calculated reward amount is zero, indicating there's no reward to claim.
-     */
+    * @dev Allows users to claim their pending rewards for a specific pool or multiple pools.
+    * This function calculates the claimable rewards based on the user's stakes and the pool's 
+    * reward configuration, then transfers the appropriate amount of reward tokens to the user.
+    *
+    * Emits a {IStaqeEvents-RewardClaimed} event for each reward that is successfully claimed.
+    *
+    * Requirements:
+    * - The caller must have earned rewards in the specified pool(s) that are ready to be claimed.
+    * - `poolIds` and `rewardIds` arrays must correspond to each other, specifying which rewards 
+    * to claim from which pools.
+    * - The `recipient` address must be valid and can be the caller or another address specified 
+    * by the caller.
+    *
+    * @param poolIds An array of pool IDs from which the user is claiming rewards.
+    * @param rewardIds A two-dimensional array of reward IDs that the user is claiming, 
+    * corresponding to each pool ID in `poolIds`.
+    * @param recipient The address that will receive the claimed rewards. It can be the caller's 
+    * address or another address specified by the caller.
+    *
+    * @return tokens A two-dimensional array of ERC20 token addresses for the claimed rewards, 
+    * corresponding to each claimed reward ID in `rewardIds`.
+    * @return amounts A two-dimensional array of amounts for the claimed rewards, corresponding 
+    * to each claimed reward ID in `rewardIds`.
+    *
+    * @custom:error PoolDoesNotExist Indicates that one of the specified pools does not exist.
+    * @custom:error RewardNotFoundInPool Indicates that one of the specified rewards does not 
+    * exist in the corresponding pool.
+    * @custom:error RewardAlreadyClaimed Indicates that the user has already claimed the 
+    * specified reward.
+    * @custom:error RewardIsNotYetAvailableForClaim Indicates that the reward is not yet 
+    * available for claiming, typically because the claimAfterBlocks period has not yet passed.
+    * @custom:error RewardIsEmpty Indicates that there is no reward available to be claimed, 
+    * possibly because the user does not have a qualifying stake.
+    * @custom:error RewardTransferFailed Indicates that the transfer of the reward tokens to 
+    * the recipient address failed.
+    */
     function claimRewards(
         uint256[] memory poolIds,
         uint256[][] memory rewardIds,
