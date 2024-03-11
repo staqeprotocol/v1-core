@@ -61,21 +61,29 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
     }
 
     /**
-     * @notice Fetches details of a specific pool by its ID.
-     * @param poolId The ID of the pool to retrieve.
-     * @return _ The details of the specified pool.
-     */
-    function getPool(uint256 poolId) public view virtual returns (Pool memory) {
-        return _pools[poolId];
-    }
+    * @notice Retrieves pool details for a given pool ID.
+    * @param poolId The ID of the pool for which details are being requested.
+    * @return poolDetails A `PoolView` struct containing details of the specified pool, including
+    *         the ERC20 and ERC721 tokens used for staking, the reward token, rewarder address,
+    *         metadata, total staked amounts for ERC20 and ERC721 tokens, total rewards, and the
+    *         pool's launch block number.
+    */
+    function getPool(
+        uint256 poolId
+    ) public view virtual returns (PoolView memory poolDetails) {
+        Pool memory pool = _pools[poolId];
 
-    /**
-     * @notice Retrieves the total number of rewards for a specified pool.
-     * @param poolId The identifier of the pool.
-     * @return uint256 The total number of rewards in the pool.
-     */
-    function getTotalRewards(uint256 poolId) public view virtual returns (uint256) {
-        return _rewards[poolId].length;
+        poolDetails = PoolView({
+             stakeERC20: pool.stakeERC20,
+            stakeERC721: pool.stakeERC721,
+            rewardToken: pool.rewardToken,
+            rewarder: pool.rewarder,
+            metadata: pool.metadata,
+            totalStakedERC20: pool.totalStakedERC20,
+            totalStakedERC721: pool.totalStakedERC721,
+            totalRewards: _rewards[poolId].length,
+            launchBlock: pool.launchBlock
+        });
     }
 
     /**
@@ -88,7 +96,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         uint256 poolId,
         uint256 rewardId
     ) public view virtual returns (Reward memory rewardDetails) {
-        if (rewardId < getTotalRewards(poolId)) {
+        if (rewardId < _rewards[poolId].length) {
             rewardDetails = _rewards[poolId][rewardId];
         }
     }
@@ -107,7 +115,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         address staker,
         uint256 poolId,
         uint256 rewardId
-    ) public view virtual returns (RewardFor memory rewardDetails) {
+    ) public view virtual returns (RewardView memory rewardDetails) {
         Reward memory reward = getReward(poolId, rewardId);
 
         uint256 stakerAmount = 0;
@@ -122,7 +130,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
             }
         }
 
-        rewardDetails = RewardFor({
+        rewardDetails = RewardView({
             isForERC721Stakers: reward.isForERC721Stakers,
             rewardToken: reward.rewardToken,
             rewardAmount: reward.rewardAmount,
@@ -204,19 +212,6 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         uint256 rewardId
     ) external view returns (IERC20, uint256) {
         return _calculateReward(staker, poolId, rewardId);
-    }
-
-    /**
-     * @notice Returns 0 if the reward is already claimable.
-     * @param poolId The ID of the pool containing the reward.
-     * @param rewardId The ID of the reward.
-     * @return _ The number of blocks until the reward can be claimed.
-     */
-    function blocksToReward(
-        uint256 poolId,
-        uint256 rewardId
-    ) public view virtual returns (uint256) {
-        return _blocksToReward(poolId, rewardId);
     }
 
     /**
@@ -619,10 +614,6 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
             revert RewardAlreadyClaimed();
         }
 
-        if (_blocksToReward(poolId, rewardId) > 0) {
-            revert RewardIsNotYetAvailableForClaim();
-        }
-
         Reward[] memory rewards = _rewards[poolId];
 
         if (rewards.length <= rewardId) {
@@ -636,6 +627,11 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         }
 
         Reward memory reward = rewards[rewardId];
+
+        if ((reward.rewardBlock + reward.claimAfterBlocks) >= block.number) {
+            revert RewardIsNotYetAvailableForClaim();
+        }
+
         for (uint256 i = 0; i < stakes.length; i++) {
             Stake memory s = stakes[i];
             /**
@@ -675,18 +671,6 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         if (amount <= 0) revert RewardIsEmpty();
 
         token = reward.rewardToken;
-    }
-
-    function _blocksToReward(
-        uint256 poolId,
-        uint256 rewardId
-    ) internal view returns (uint256) {
-        uint256 claimAfterBlock = _rewards[poolId][rewardId].rewardBlock +
-            _rewards[poolId][rewardId].claimAfterBlocks;
-        return
-            claimAfterBlock >= block.number
-                ? claimAfterBlock - block.number
-                : 0;
     }
 
     function _isClaimed(
