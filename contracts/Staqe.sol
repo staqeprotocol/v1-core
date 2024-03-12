@@ -61,62 +61,69 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
     }
 
     /**
-    * @notice Retrieves pool details for a given pool ID.
-    * @param poolId The ID of the pool for which details are being requested.
-    * @return poolDetails A `PoolView` struct containing details of the specified pool, including
-    *         the ERC20 and ERC721 tokens used for staking, the reward token, rewarder address,
-    *         metadata, total staked amounts for ERC20 and ERC721 tokens, total rewards, and the
-    *         pool's launch block number.
-    */
+     * @notice Retrieves details of a specific pool by its ID.
+     * @param poolId The ID of the pool to retrieve.
+     * @return poolDetails The details of the specified pool.
+     */
     function getPool(
         uint256 poolId
-    ) public view virtual returns (PoolView memory poolDetails) {
-        Pool memory pool = _pools[poolId];
+    ) public view virtual returns (Pool memory poolDetails) {
+        poolDetails = _pools[poolId];
+    }
 
-        poolDetails = PoolView({
-             stakeERC20: pool.stakeERC20,
-            stakeERC721: pool.stakeERC721,
-            rewardToken: pool.rewardToken,
-            rewarder: pool.rewarder,
-            metadata: pool.metadata,
-            totalStakedERC20: pool.totalStakedERC20,
-            totalStakedERC721: pool.totalStakedERC721,
+    /**
+     * @notice Retrieves pool details for a specific staker by pool ID.
+     * @param staker The address of the staker.
+     * @param poolId The ID of the pool to retrieve information for.
+     * @return poolDetails Detailed information about the pool specific to the staker.
+     */
+    function getPool(
+        address staker,
+        uint256 poolId
+    ) public view virtual returns (StakerPool memory poolDetails) {
+        Pool memory p = _pools[poolId];
+
+        poolDetails = StakerPool({
+            stakeERC20: p.stakeERC20,
+            stakeERC721: p.stakeERC721,
+            rewardToken: p.rewardToken,
+            rewarder: p.rewarder,
+            metadata: p.metadata,
+            totalStakedERC20: p.totalStakedERC20,
+            totalStakedERC721: p.totalStakedERC721,
             totalRewards: _rewards[poolId].length,
-            launchBlock: pool.launchBlock
+            totalStakes: _stakes[staker][poolId].length,
+            launchBlock: p.launchBlock
         });
     }
 
     /**
-     * @notice Fetches details of a specific reward in a pool.
-     * @param poolId The ID of the pool to query.
-     * @param rewardId The ID of the reward within the pool to retrieve.
-     * @return rewardDetails The reward details.
+     * @notice Retrieves details of a specific reward in a pool.
+     * @param poolId The ID of the pool containing the reward.
+     * @param rewardId The ID of the reward within the specified pool.
+     * @return rewardDetails The details of the specified reward.
      */
     function getReward(
         uint256 poolId,
         uint256 rewardId
     ) public view virtual returns (Reward memory rewardDetails) {
-        if (rewardId < _rewards[poolId].length) {
+        if (rewardId < _rewards[poolId].length)
             rewardDetails = _rewards[poolId][rewardId];
-        }
     }
 
     /**
-     * @notice Calculates and retrieves reward details for a specific staker in a particular pool.
-     * @param staker The address of the staker for whom the reward details are being fetched.
-     * @param poolId The ID of the pool from which to fetch the reward details.
-     * @param rewardId The ID of the specific reward within the pool.
-     * @return rewardDetails A `RewardFor` struct containing detailed information about the staker's reward.
-     *         This includes whether the reward is for stakers, the reward token, the reward amount,
-     *         the amount specific to the staker, the total staked amount, the number of blocks to claim after,
-     *         the reward block, and whether the reward has been claimed.
+     * @notice Retrieves reward details for a specific staker in a given pool.
+     * @param staker The address of the staker.
+     * @param poolId The ID of the pool containing the reward.
+     * @param rewardId The ID of the reward within the pool.
+     * @return rewardDetails Detailed information about the reward specific to the staker.
      */
-    function getRewardFor(
+    function getReward(
         address staker,
         uint256 poolId,
         uint256 rewardId
-    ) public view virtual returns (RewardView memory rewardDetails) {
-        Reward memory reward = getReward(poolId, rewardId);
+    ) public view virtual returns (StakerReward memory rewardDetails) {
+        Reward memory r = getReward(poolId, rewardId);
 
         uint256 stakerAmount = 0;
         bool claimed = false;
@@ -130,14 +137,14 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
             }
         }
 
-        rewardDetails = RewardView({
-            isForERC721Stakers: reward.isForERC721Stakers,
-            rewardToken: reward.rewardToken,
-            rewardAmount: reward.rewardAmount,
+        rewardDetails = StakerReward({
+            isForERC721Stakers: r.isForERC721Stakers,
+            rewardToken: r.rewardToken,
+            rewardAmount: r.rewardAmount,
             stakerAmount: stakerAmount,
-            totalStaked: reward.totalStaked,
-            claimAfterBlocks: reward.claimAfterBlocks,
-            rewardBlock: reward.rewardBlock,
+            totalStaked: r.totalStaked,
+            claimAfterBlocks: r.claimAfterBlocks,
+            rewardBlock: r.rewardBlock,
             claimed: claimed
         });
     }
@@ -154,19 +161,6 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
     }
 
     /**
-     * @notice Gets the total number of stakes a user has in a specific pool.
-     * @param staker The address of the staker.
-     * @param poolId The ID of the pool.
-     * @return _ The total number of stakes the user has in the pool.
-     */
-    function getTotalStakes(
-        address staker,
-        uint256 poolId
-    ) public view virtual returns (uint256) {
-        return _stakes[staker][poolId].length;
-    }
-
-    /**
      * @notice Retrieves details of a specific stake a user has in a pool.
      * @param staker The address of the staker.
      * @param poolId The ID of the pool.
@@ -178,7 +172,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         uint256 poolId,
         uint256 stakeId
     ) public view virtual returns (Stake memory stakeDetails) {
-        if (stakeId < getTotalStakes(staker, poolId)) {
+        if (stakeId < _stakes[staker][poolId].length) {
             stakeDetails = _stakes[staker][poolId][stakeId];
         }
     }
@@ -197,14 +191,14 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
     }
 
     /**
-     * @notice Returns the reward token and amount for a particular reward ID within a specified
-     *         pool for a staker. The function calculates the reward amount based on the staker's
-     *         stakes if the reward has not yet been claimed and is available for claim.
-     * @param staker The address of the staker querying the reward.
-     * @param poolId The ID of the pool from which the reward details are being requested.
-     * @param rewardId The ID of the specific reward within the pool.
-     * @return _ The token in which the reward is denominated.
-     * @return _ The amount of the reward available to the staker.
+     * @notice Calculates the reward for a staker in a given pool.
+     * @dev This function is an external wrapper around `_calculateReward`,
+     *      necessary for try/catch in `getReward`.
+     * @param staker The address of the staker.
+     * @param poolId The ID of the pool.
+     * @param rewardId The ID of the reward within the pool.
+     * @return token The ERC20 token in which the reward is denominated.
+     * @return amount The amount of reward the staker is eligible to claim.
      */
     function calculateReward(
         address staker,
@@ -212,31 +206,6 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         uint256 rewardId
     ) external view returns (IERC20, uint256) {
         return _calculateReward(staker, poolId, rewardId);
-    }
-
-    /**
-     * @notice Checks if a staker is currently active in a given pool.
-     *         An active staker is one who has a stake that hasn't been unstaked yet.
-     * @param staker The address of the staker to check.
-     * @param poolId The ID of the pool to check for the staker's activity.
-     * @return _ Returns true if the staker has an active stake in the pool, false otherwise.
-     */
-    function isActiveStaker(
-        address staker,
-        uint256 poolId
-    ) public view virtual returns (bool) {
-        return _isActiveStaker(staker, poolId);
-    }
-
-    /**
-     * @notice Utilizes ERC165 to check for ERC721 interface support.
-     * @param contractAddress The address of the contract to check.
-     * @return _ True if the contract is an ERC721 token, false otherwise.
-     */
-    function isERC721(
-        address contractAddress
-    ) public view virtual returns (bool) {
-        return _isERC721(contractAddress);
     }
 
     /**

@@ -25,18 +25,6 @@ interface IStaqeStructs {
         uint256 launchBlock;
     }
 
-    struct PoolView {
-        IERC20 stakeERC20;
-        IERC721 stakeERC721;
-        IERC20 rewardToken;
-        address rewarder;
-        bytes32 metadata;
-        uint256 totalStakedERC20;
-        uint256 totalStakedERC721;
-        uint256 totalRewards; // Add Total Rewards
-        uint256 launchBlock;
-    }
-
     struct Reward {
         bool isForERC721Stakers;
         IERC20 rewardToken;
@@ -46,21 +34,34 @@ interface IStaqeStructs {
         uint256 rewardBlock;
     }
 
-    struct RewardView {
-        bool isForERC721Stakers;
-        IERC20 rewardToken;
-        uint256 rewardAmount;
-        uint256 stakerAmount; // Add Staker Amount
-        uint256 totalStaked;
-        uint256 claimAfterBlocks;
-        uint256 rewardBlock;
-        bool claimed; // Add Claimed or Not
-    }
-
     struct Stake {
         uint256 amountERC20;
         uint256 idERC721;
         uint256 stakeBlock;
         uint256 unstakeBlock;
+    }
+
+    struct StakerPool {
+        IERC20 stakeERC20;
+        IERC721 stakeERC721;
+        IERC20 rewardToken;
+        address rewarder;
+        bytes32 metadata;
+        uint256 totalStakedERC20;
+        uint256 totalStakedERC721;
+        uint256 totalRewards; // Add Total Rewards to Pool struct
+        uint256 totalStakes; // Add Total Stakes to Pool struct
+        uint256 launchBlock;
+    }
+
+    struct StakerReward {
+        bool isForERC721Stakers;
+        IERC20 rewardToken;
+        uint256 rewardAmount;
+        uint256 stakerAmount; // Add Staker Amount to Reward struct
+        uint256 totalStaked;
+        uint256 claimAfterBlocks;
+        uint256 rewardBlock;
+        bool claimed; // Add Claimed or Not to Reward struct
     }
 }
