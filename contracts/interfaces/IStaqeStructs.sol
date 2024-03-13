@@ -49,8 +49,8 @@ interface IStaqeStructs {
         bytes32 metadata;
         uint256 totalStakedERC20;
         uint256 totalStakedERC721;
-        uint256 totalRewards; // Add Total Rewards to Pool struct
-        uint256 totalStakes; // Add Total Stakes to Pool struct
+        uint256 totalRewards; // Add Total Rewards
+        uint256 totalStakerStakes; // Add Total Number Of Staker Stakes
         uint256 launchBlock;
     }
 
@@ -58,10 +58,10 @@ interface IStaqeStructs {
         bool isForERC721Stakers;
         IERC20 rewardToken;
         uint256 rewardAmount;
-        uint256 stakerAmount; // Add Staker Amount to Reward struct
+        uint256 stakerAmount; // Add Staker Amount
         uint256 totalStaked;
         uint256 claimAfterBlocks;
         uint256 rewardBlock;
-        bool claimed; // Add Claimed or Not to Reward struct
+        bool claimed; // Add Claimed or Not
     }
 }

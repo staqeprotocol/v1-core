@@ -92,7 +92,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
             totalStakedERC20: p.totalStakedERC20,
             totalStakedERC721: p.totalStakedERC721,
             totalRewards: _rewards[poolId].length,
-            totalStakes: _stakes[staker][poolId].length,
+            totalStakerStakes: _stakes[staker][poolId].length,
             launchBlock: p.launchBlock
         });
     }
