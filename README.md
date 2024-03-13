@@ -1,7 +1,7 @@
 # Staqe Protocol
 
 <div style="text-align:center" align="center">
-    <img src="https://raw.githubusercontent.com/staqeprotocol/v1-core/master/image.svg" width="300">
+    <img src="https://raw.githubusercontent.com/staqeprotocol/v1-core/master/image.svg" width="600">
 </div>
 
 The Staqe is a versatile and robust Ethereum smart contract designed to facilitate a comprehensive staking system. It allows users to stake ERC20 or ERC721 tokens in various pools to earn rewards in ERC20 tokens. The contract is designed to support multiple staking pools, each with its unique configuration and rules, providing flexibility and opportunities for diverse staking strategies.
