@@ -2,7 +2,8 @@
 pragma solidity ^0.8.20;
 pragma abicoder v2;
 
-import {Staqe, IERC20, ERC20Permit} from "@staqeprotocol/v1-core/contracts/Staqe.sol";
+import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
+import {Staqe, IERC20} from "@staqeprotocol/v1-core/contracts/Staqe.sol";
 
 /**
  *       _                                               _ _   
@@ -14,15 +15,17 @@ import {Staqe, IERC20, ERC20Permit} from "@staqeprotocol/v1-core/contracts/Staqe
  */
 abstract contract StaqePermit is Staqe {
     /**
-     * @notice Stakes tokens in a pool with a permit, allowing the sender to approve and stake in a single transaction.
-     * @param poolId The ID of the pool in which to stake tokens.
-     * @param amount The amount of tokens to stake in the pool.
-     * @param deadline The time by which the permit must be used before it expires.
-     * @param v The recovery byte of the signature.
-     * @param r Half of the ECDSA signature pair.
-     * @param s Half of the ECDSA signature pair.
-     * @param max A boolean to indicate if the maximum amount of tokens should be approved (true) or the specified amount (false).
-     */
+    * @notice Stakes tokens in a pool with a permit, combining ERC20 token approval and staking in a single transaction.
+    * @dev This function uses the nonReentrant modifier from OpenZeppelin to prevent reentrancy attacks.
+    * @param poolId The ID of the pool in which to stake tokens.
+    * @param amount The amount of tokens to stake in the pool.
+    * @param deadline The time by which the permit must be used before it expires. This is typically a timestamp.
+    * @param v The recovery byte of the signature, part of the ECDSA signature components.
+    * @param r Half of the ECDSA signature pair, specifically the first 32 bytes.
+    * @param s Half of the ECDSA signature pair, specifically the second 32 bytes.
+    * @param max If set to true, the permit will approve the maximum uint256 value, allowing unlimited transfers. 
+    *            If false, the permit will only approve the specified amount.
+    */
     function stakeWithPermit(
         uint256 poolId,
         uint256 amount,
@@ -31,8 +34,9 @@ abstract contract StaqePermit is Staqe {
         bytes32 r,
         bytes32 s,
         bool max
-    ) external {
-        ERC20Permit(address(getPool(poolId).stakeERC20)).permit(
+    ) external nonReentrant {
+        // slither-disable-next-line reentrancy-no-eth
+        IERC20Permit(address(getPool(poolId).stakeERC20)).permit(
             _msgSender(),
             address(this),
             max ? type(uint256).max : amount,
@@ -43,6 +47,7 @@ abstract contract StaqePermit is Staqe {
 
     /**
      * @notice Adds a reward to a pool with a permit, allowing the sender to approve and add a reward in a single transaction.
+     * @dev This function prevents reentrancy by updating the state before transferring tokens.
      * @param poolId The ID of the pool to which the reward will be added.
      * @param rewardToken The token that will be used for the reward.
      * @param rewardAmount The amount of the reward token to be added.
@@ -65,8 +70,8 @@ abstract contract StaqePermit is Staqe {
         bytes32 r,
         bytes32 s,
         bool max
-    ) external {
-        ERC20Permit(address(rewardToken)).permit(
+    ) external nonReentrant {
+        IERC20Permit(address(rewardToken)).permit(
             _msgSender(),
             address(this),
             max ? type(uint256).max : rewardAmount,

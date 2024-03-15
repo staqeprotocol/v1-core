@@ -3,9 +3,9 @@ pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import {Staqe, IERC20, IERC721} from "@staqeprotocol/v1-core/contracts/Staqe.sol";
-import {StaqeViews} from "@staqeprotocol/v1-core/contracts/extensions/StaqeViews.sol";
+import {StaqePermit} from "@staqeprotocol/v1-core/contracts/extensions/StaqePermit.sol";
 
-contract StaqeDeploy is Staqe, StaqeViews {
+contract StaqeProtocol is Staqe, StaqePermit {
     constructor(
         IERC20 stakeERC20,
         IERC721 stakeERC721,

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 pragma abicoder v2;
 
-import {IStaqe, IERC20, ERC20Permit, IERC721, IERC165} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqe.sol";
+import {IStaqe, IERC20, IERC721, IERC165} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqe.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 

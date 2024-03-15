@@ -30,4 +30,4 @@ jobs:
         run: pip install slither-analyzer
 
       - name: Run Slither
-        run: slither "contracts/StaqeDeploy.sol" --exclude-informational
+        run: slither "contracts/StaqeProtocol.sol" --exclude-informational

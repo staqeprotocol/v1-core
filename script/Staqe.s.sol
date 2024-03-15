@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Script, console} from "forge-std/Script.sol";
-import {StaqeDeploy, IERC20, IERC721} from "@staqeprotocol/v1-core/contracts/StaqeDeploy.sol";
+import {StaqeProtocol as Staqe, IERC20, IERC721} from "@staqeprotocol/v1-core/contracts/StaqeProtocol.sol";
 
 import {ERC20Mock} from "../test/mock/ERC20Mock.sol";
 import {ERC721Mock, IERC165} from "../test/mock/ERC721Mock.sol";
@@ -18,7 +18,7 @@ import {ERC721Mock, IERC165} from "../test/mock/ERC721Mock.sol";
   *      Genesis NFT: 0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6
   *      Staqe: 0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e
  */
-contract StaqeDeployScript is Script {
+contract StaqeScript is Script {
     function run() external {
         address userAddress = vm.envAddress("USER_ADDRESS");
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -44,7 +44,7 @@ contract StaqeDeployScript is Script {
         ERC721Mock(genesisNFT).mint(userAddress);
         console.log("Genesis NFT:", address(genesisNFT));
 
-        StaqeDeploy staqe = new StaqeDeploy(
+        Staqe staqe = new Staqe(
             IERC20(address(0)),
             genesisNFT,
             IERC20(address(0)),

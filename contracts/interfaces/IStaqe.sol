@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import {IERC721, IERC165} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import {IStaqeEvents} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqeEvents.sol";
