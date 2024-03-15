@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 pragma abicoder v2;
 
-import {IStaqe, IERC20, IERC721, IERC165} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqe.sol";
+import {IStaqe, IERC20, ERC20Permit, IERC721, IERC165} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqe.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 
@@ -293,7 +293,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         uint256 poolId,
         uint256 amount,
         uint256 id
-    ) external nonReentrant returns (uint256 stakeId) {
+    ) public nonReentrant returns (uint256 stakeId) {
         Pool storage pool = _pools[poolId];
 
         if (pool.launchBlock <= 0) {
@@ -341,7 +341,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         uint256 rewardAmount,
         uint256 claimAfterBlocks,
         bool isForERC721Stakers
-    ) external nonReentrant returns (uint256 rewardId) {
+    ) public nonReentrant returns (uint256 rewardId) {
         Pool memory pool = _pools[poolId];
 
         if (pool.launchBlock <= 0) {
