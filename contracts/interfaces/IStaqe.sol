@@ -69,6 +69,7 @@ abstract contract IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs, IStaqeERC
      * the zero address if the pool is for ERC20 staking.
      * @param rewardToken The ERC20 token address that will be used to distribute rewards to 
      * stakers.
+     * @param totalMax Total max tokens in pool.
      * @param metadata Metadata providing additional information about the pool.
      *
      * @return poolId The ID of the newly created staking pool, which can be used to interact 
@@ -85,6 +86,7 @@ abstract contract IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs, IStaqeERC
         IERC20 stakeERC20,
         IERC721 stakeERC721,
         IERC20 rewardToken,
+        uint256 totalMax,
         string memory metadata
     ) external virtual returns (
         uint256 poolId
@@ -103,6 +105,7 @@ abstract contract IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs, IStaqeERC
     * - The new `metadata` must be different from the existing metadata and cannot be empty.
     *
     * @param poolId The ID of the pool whose metadata is being updated.
+    * @param totalMax Total max tokens in pool.
     * @param metadata The new metadata for the pool. It must be different 
     * from the current metadata and cannot be the zero bytes.
     *
@@ -114,6 +117,7 @@ abstract contract IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs, IStaqeERC
     */
     function editPool(
         uint256 poolId,
+        uint256 totalMax,
         string memory metadata
     ) external virtual;
 

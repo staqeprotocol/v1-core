@@ -40,6 +40,7 @@ contract Staqe is IStaqe {
             stakeERC20: stakeERC20,
             stakeERC721: stakeERC721,
             rewardToken: rewardToken,
+            totalMax: 0,
             totalStakedERC20: 0,
             totalStakedERC721: 0,
             launchBlock: block.number
@@ -83,6 +84,7 @@ contract Staqe is IStaqe {
             rewardToken: p.rewardToken,
             rewarder: ownerOf(poolId),
             metadata: tokenURI(poolId),
+            totalMax: p.totalMax,
             totalStakedERC20: p.totalStakedERC20,
             totalStakedERC721: p.totalStakedERC721,
             totalRewards: _rewards[poolId].length,
@@ -234,6 +236,7 @@ contract Staqe is IStaqe {
         IERC20 stakeERC20,
         IERC721 stakeERC721,
         IERC20 rewardToken,
+        uint256 totalMax,
         string memory metadata
     ) external override nonReentrant returns (uint256 poolId) {
         if (!_isActiveStaker(_msgSender(), 0)) {
@@ -258,12 +261,21 @@ contract Staqe is IStaqe {
             revert InvalidMetadata();
         }
 
+        if (
+            totalMax > 0 &&
+            address(stakeERC20) != address(0) &&
+            address(stakeERC721) != address(0)
+        ) {
+            revert TotalMaxForOnlyOneTypeOfToken();
+        }
+
         poolId = ++_totalPools;
 
         _pools[poolId] = Pool({
             stakeERC20: stakeERC20,
             stakeERC721: stakeERC721,
             rewardToken: rewardToken,
+            totalMax: totalMax,
             totalStakedERC20: 0,
             totalStakedERC721: 0,
             launchBlock: block.number
@@ -280,6 +292,7 @@ contract Staqe is IStaqe {
      */
     function editPool(
         uint256 poolId,
+        uint256 totalMax,
         string memory metadata
     ) external override nonReentrant {
         Pool storage pool = _pools[poolId];
@@ -294,6 +307,10 @@ contract Staqe is IStaqe {
 
         if (ownerOf(poolId) != _msgSender()) {
             revert OnlyOwnerHasAccessToEditMetadata();
+        }
+
+        if (totalMax > pool.totalMax) {
+            pool.totalMax = totalMax;
         }
 
         _setTokenURI(poolId, metadata);
@@ -324,14 +341,19 @@ contract Staqe is IStaqe {
             revert StakeOnNextBlockAfterReward();
         }
 
-        // if (amount > 0 && address(pool.stakeERC20) == address(0)) {
-        //     revert InvalidAmountOrId();
-        // }
-
         stakeId = _stakes[_msgSender()][poolId].length;
 
         if (amount > 0) pool.totalStakedERC20 += amount;
         if (id > 0) pool.totalStakedERC721 += 1;
+
+        if (pool.totalMax > 0) {
+            if (amount > 0 && pool.totalStakedERC20 > pool.totalMax) {
+                revert MoreThanTheTotalMaxTokens();
+            }
+            if (id > 0 && pool.totalStakedERC721 > pool.totalMax) {
+                revert MoreThanTheTotalMaxTokens();
+            }
+        }
 
         _stakes[_msgSender()][poolId].push(
             Stake({

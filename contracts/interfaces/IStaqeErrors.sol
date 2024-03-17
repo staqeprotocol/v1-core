@@ -33,4 +33,6 @@ interface IStaqeErrors {
     error UnstakeTransferFailed();
     error UnstakeOnNextBlockAndGetReward();
     error OnlyAvailableToStakersInGenesis();
+    error TotalMaxForOnlyOneTypeOfToken();
+    error MoreThanTheTotalMaxTokens();
 }

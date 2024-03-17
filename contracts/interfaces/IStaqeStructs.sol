@@ -18,6 +18,7 @@ interface IStaqeStructs {
         IERC20 stakeERC20;
         IERC721 stakeERC721;
         IERC20 rewardToken;
+        uint256 totalMax;
         uint256 totalStakedERC20;
         uint256 totalStakedERC721;
         uint256 launchBlock;
@@ -45,6 +46,7 @@ interface IStaqeStructs {
         IERC20 rewardToken;
         address rewarder; // Add Rewarder from ERC721
         string metadata; // Add IPFS CID Metadata from ERC721
+        uint256 totalMax;
         uint256 totalStakedERC20;
         uint256 totalStakedERC721;
         uint256 totalRewards; // Add Total Rewards

@@ -82,10 +82,10 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
     function test_Pool() public {
         vm.expectRevert(OnlyAvailableToStakersInGenesis.selector);
-        staqe.launchPool(erc20, erc721, erc20, "Test");
+        staqe.launchPool(erc20, erc721, erc20, 0, "Test");
 
         vm.startPrank(user1);
-            staqe.launchPool(stakeA, erc721, erc20, "Test");
+            staqe.launchPool(stakeA, erc721, erc20, 100 ether, "Test");
         vm.stopPrank();
 
         assertEq(staqe.getTotalPools(), 1);
@@ -93,19 +93,36 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         assertEq(address(staqe.getPool(user1, 1).rewarder), address(user1));
 
         vm.expectRevert(OnlyOwnerHasAccessToEditMetadata.selector);
-        staqe.editPool(1, "New");
+        staqe.editPool(1, 10 ether, "New Metadata");
 
         vm.startPrank(user1);
-            staqe.editPool(1, "New");
+            staqe.editPool(1, 10 ether, "New Metadata");
         vm.stopPrank();
 
-        assertEq(bytes(staqe.getPool(user1, 1).metadata).length, bytes("New").length);
-        assertEq(bytes(staqe.tokenURI(1)).length, bytes("New").length);
+        assertEq(bytes(staqe.getPool(user1, 1).metadata).length, bytes("New Metadata").length);
+        assertEq(bytes(staqe.tokenURI(1)).length, bytes("New Metadata").length);
+
+        vm.roll(blockId++);
+
+        vm.startPrank(user2);
+            staqe.stake(1, 100 ether, 0);
+
+            vm.expectRevert(MoreThanTheTotalMaxTokens.selector);
+            staqe.stake(1, 1 ether, 0);
+        vm.stopPrank();
+
+        vm.startPrank(user1);
+            staqe.editPool(1, 101 ether, "Increase the total max");
+        vm.stopPrank();
+
+        vm.startPrank(user2);
+            staqe.stake(1, 1 ether, 0);
+        vm.stopPrank();
     }
 
     function test_Reward() public {
         vm.startPrank(user1);
-            staqe.launchPool(stakeA, erc721, erc20, "Test");
+            staqe.launchPool(stakeA, erc721, erc20, 0, "Test");
         vm.stopPrank();
 
         vm.roll(blockId++);
@@ -139,7 +156,7 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
     function test_Stake() public {
         vm.startPrank(user1);
-            staqe.launchPool(stakeA, erc721, erc20, "Test");
+            staqe.launchPool(stakeA, erc721, erc20, 0, "Test");
         vm.stopPrank();
 
         vm.roll(blockId++);
@@ -193,11 +210,11 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
     function test_Claim() public {
         vm.startPrank(user1);
-            staqe.launchPool(stakeA, erc721, erc20, "Test 1");
+            staqe.launchPool(stakeA, erc721, erc20, 0, "Test 1");
         vm.stopPrank();
 
         vm.startPrank(user2);
-            staqe.launchPool(erc20, nftA, rewardB, "Test 2");
+            staqe.launchPool(erc20, nftA, rewardB, 0, "Test 2");
         vm.stopPrank();
 
         vm.roll(blockId++);
@@ -261,7 +278,7 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
     function test_Unstake() public {
         vm.startPrank(user1);
-            staqe.launchPool(stakeA, erc721, erc20, "Test");
+            staqe.launchPool(stakeA, erc721, erc20, 0, "Test");
         vm.stopPrank();
 
         vm.roll(blockId++);
