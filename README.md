@@ -4,57 +4,57 @@
     <img src="https://raw.githubusercontent.com/staqeprotocol/v1-core/master/image.svg" width="600">
 </div>
 
-The Staqe is a versatile and robust Ethereum smart contract designed to facilitate a comprehensive staking system. It allows users to stake ERC20 or ERC721 tokens in various pools to earn rewards in ERC20 tokens. The contract is designed to support multiple staking pools, each with its unique configuration and rules, providing flexibility and opportunities for diverse staking strategies.
+Staqe Protocol is a comprehensive and flexible staking solution built on the Ethereum blockchain. It enables users to stake ERC20 or ERC721 tokens across various pools to earn rewards in ERC20 tokens. Staqe Protocol is designed to cater to a wide range of staking strategies, providing versatility and robustness in its approach to decentralized finance (DeFi) staking mechanisms.
 
-## Features
+## Key Features
 
-- **Multiple Staking Pools**: Create and manage various staking pools, each with distinct configurations for staked tokens and rewards.
-- **ERC20 and ERC721 Staking**: Supports staking of both ERC20 and ERC721 tokens, catering to a broad range of assets and user preferences.
-- **Reward Allocation**: Distribute ERC20 token rewards to stakers, with customizable rules based on the pool's configuration and the user's staked assets.
-- **Dynamic Staking and Unstaking**: Users can stake and unstake their tokens at any time, according to the rules defined by each pool.
-- **Reward Claims**: Stakers can claim their earned rewards after a specified number of blocks, ensuring fair distribution based on the staking duration and amount.
-- **Transparent Operations**: The contract employs events and custom errors to provide clear feedback and tracking of all operations and state changes.
+- **Multiple Staking Pools**: Users can choose from various pools to stake their assets, each with distinct configurations and reward mechanisms.
+- **ERC20 and ERC721 Staking**: Staqe supports staking of both ERC20 and ERC721 tokens, offering a diverse range of staking opportunities.
+- **Dynamic Reward System**: Earn rewards in ERC20 tokens with a system that accommodates different reward structures per pool.
+- **EIP-2612 Permit Support**: Streamlined interactions through permit functions, allowing users to approve and stake in a single transaction.
+- **Comprehensive Interfaces**: Utilizes a set of interfaces for clear contract interaction, error handling, and event logging.
+- **Modular Design**: Extensible architecture, allowing for future enhancements and integration with other DeFi protocols.
+- **Security First**: Built with security in mind, including protections against reentrancy attacks and adhering to industry-standard best practices.
 
-## Contract Interfaces
+## Components
 
-- **IStaqe**: The main interface defining the core functionalities like pool creation, staking, reward management, and unstaking.
-- **IStaqeStructs**: Defines various data structures used by the contract, including Pool, Reward, Stake, StakerPool, and StakerReward.
-- **IStaqeEvents**: Declares events emitted by the contract, offering insights into its operations and changes.
-- **IStaqeErrors**: Lists custom errors for precise feedback on failed operations or invalid actions within the contract.
+### Staqe Contract
 
-## Core Functionalities
+The core contract manages the logic for staking, unstaking, reward distribution, and pool management. Key functionalities include:
 
-### Pool Management
+- `launchPool`: Create a new staking pool with specified parameters.
+- `editPool`: Modify the metadata of an existing pool.
+- `stake`: Stake ERC20 or ERC721 tokens in a chosen pool.
+- `addReward`: Add a reward to a pool, specifying the reward token and amount.
+- `unstake`: Withdraw staked tokens from a pool.
+- `claimRewards`: Claim earned rewards from one or multiple pools.
 
-- **launchPool**: Create a new staking pool with specific parameters for staked tokens and rewards.
-- **editPool**: Update the metadata of an existing pool, allowing dynamic adjustments by the pool's rewarder.
+### StaqePermit Extension
 
-### Staking and Unstaking
+This extension adds permit-based functions to the core Staqe contract, leveraging EIP-2612 permits:
 
-- **stake**: Deposit ERC20 or ERC721 tokens into a pool to participate in reward distribution.
-- **unstake**: Withdraw staked tokens from a pool, potentially after claiming due rewards.
+- `stakeWithPermit`: Approve and stake ERC20 tokens in a single transaction.
+- `addRewardWithPermit`: Approve and add a reward in a single transaction.
 
-### Reward Management
+### StaqeProtocol Contract
 
-- **addReward**: Allocate rewards to a pool, defining the reward amount, token, and eligibility criteria.
-- **claimRewards**: Retrieve earned rewards from one or multiple pools, transferred to a specified recipient address.
+A concrete implementation that brings together the Staqe core functionalities and the permit extensions, serving as the primary interface for users.
 
-## Event Logging
+## Interfaces and Inheritance
 
-- Events like `PoolLaunched`, `StakeCreated`, `StakeWithdrawn`, `RewardAdded`, and `RewardClaimed` provide transparency and traceability for all significant actions and state changes within the contract.
+Staqe Protocol leverages multiple interfaces and inherits from well-established contracts to ensure robustness and interoperability:
 
-## Error Handling
+- Interfaces like `IStaqeEvents`, `IStaqeErrors`, and `IStaqeStructs` define the contract's events, error handling, and data structures.
+- Inherits from OpenZeppelin's `ERC721` for NFT functionality and `Ownable` for ownership management.
 
-- Custom errors like `InvalidStakeToken`, `RewardIsEmpty`, `PoolDoesNotExist`, and others offer specific and actionable feedback for unsuccessful operations.
+## Security and Best Practices
 
-## Usage
+Security is paramount in the Staqe Protocol design, incorporating features like:
 
-The Staqe is intended for use in decentralized finance (DeFi) applications that require a flexible and efficient staking mechanism. It can be integrated into platforms that offer staking services, allowing users to earn rewards by locking their digital assets in a secure and decentralized manner.
+- `nonReentrant` modifier from OpenZeppelin's `ReentrancyGuard` to prevent reentrancy attacks.
+- Explicit and descriptive error messages to enhance contract readability and debugging.
+- Adherence to smart contract development best practices and community standards.
 
-## Deployment
+## Conclusion
 
-To deploy the Staqe, compile the Solidity code with a compatible compiler (version 0.8.20 or higher) and deploy it to the Ethereum network using a suitable deployment framework or toolchain.
-
-## License
-
-The Staqe is licensed under the Business Source License 1.1 (BUSL-1.1).
+Staqe Protocol represents a sophisticated and secure approach to staking in the DeFi ecosystem, providing users with a versatile platform for earning rewards through staking. Its modular design and adherence to best practices make it a solid choice for developers and users looking for a reliable staking solution on the Ethereum blockchain.

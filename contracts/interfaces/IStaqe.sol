@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 pragma abicoder v2;
 
@@ -8,6 +8,12 @@ import {IERC721, IERC165} from "@openzeppelin/contracts/token/ERC721/IERC721.sol
 import {IStaqeEvents} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqeEvents.sol";
 import {IStaqeErrors} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqeErrors.sol";
 import {IStaqeStructs} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqeStructs.sol";
+import {IStaqeERC721} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqeERC721.sol";
+import {IStaqeERC7572} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqeERC7572.sol";
+import {IStaqeReentrancy} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqeReentrancy.sol";
+
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  *       _                     _       _             __
@@ -38,7 +44,7 @@ import {IStaqeStructs} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqeS
  * The contract is designed to be versatile and adaptable, supporting a wide range of staking and reward
  * mechanisms to accommodate different types of staking assets and reward distributions.
  */
-interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
+abstract contract IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs, IStaqeERC721, IStaqeERC7572, IStaqeReentrancy {
     /**
      * @dev Launches a new staking pool with specified parameters.
      * This function allows the contract caller to create a new staking pool where users can 
@@ -55,7 +61,7 @@ interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
      * - `rewarder` is the address authorized to manage rewards for the pool, often the same 
      *   as the caller or a dedicated rewards manager.
      * - `metadata` is field that can be used to store additional information 
-     *   about the pool, encoded in bytes32.
+     *   about the pool.
      *
      * @param stakeERC20 The ERC20 token address that users will stake in this pool. Can be 
      * the zero address if the pool is for ERC721 staking.
@@ -63,10 +69,7 @@ interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
      * the zero address if the pool is for ERC20 staking.
      * @param rewardToken The ERC20 token address that will be used to distribute rewards to 
      * stakers.
-     * @param rewarder The address with the authority to manage and distribute rewards for 
-     * this pool.
-     * @param metadata Metadata providing additional information about the pool, 
-     * encoded as bytes32.
+     * @param metadata Metadata providing additional information about the pool.
      *
      * @return poolId The ID of the newly created staking pool, which can be used to interact 
      * with the pool in future transactions.
@@ -82,9 +85,10 @@ interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
         IERC20 stakeERC20,
         IERC721 stakeERC721,
         IERC20 rewardToken,
-        address rewarder,
-        bytes32 metadata
-    ) external returns (uint256 poolId);
+        string memory metadata
+    ) external virtual returns (
+        uint256 poolId
+    );
 
     /**
     * @dev Edits the metadata of an existing staking pool.
@@ -99,7 +103,7 @@ interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
     * - The new `metadata` must be different from the existing metadata and cannot be empty.
     *
     * @param poolId The ID of the pool whose metadata is being updated.
-    * @param metadata The new metadata for the pool, encoded as bytes32. It must be different 
+    * @param metadata The new metadata for the pool. It must be different 
     * from the current metadata and cannot be the zero bytes.
     *
     * @custom:error PoolDoesNotExist Indicates that the specified pool does not exist.
@@ -108,7 +112,10 @@ interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
     * @custom:error InvalidMetadata Indicates that the provided metadata is invalid (e.g., 
     * empty or the same as the current metadata).
     */
-    function editPool(uint256 poolId, bytes32 metadata) external;
+    function editPool(
+        uint256 poolId,
+        string memory metadata
+    ) external virtual;
 
     /**
     * @dev Allows a user to stake ERC20 or ERC721 tokens into a specified pool.
@@ -142,7 +149,9 @@ interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
         uint256 poolId,
         uint256 amount,
         uint256 id
-    ) external returns (uint256 stakeId);
+    ) external virtual returns (
+        uint256 stakeId
+    );
 
     /**
     * @dev Adds a reward to a specified pool, enabling stakers to earn additional tokens.
@@ -183,7 +192,9 @@ interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
         uint256 rewardAmount,
         uint256 claimAfterBlocks,
         bool isForERC721Stakers
-    ) external returns (uint256 rewardId);
+    ) external virtual returns (
+        uint256 rewardId
+    );
 
     /**
     * @dev Allows a user to unstake previously staked ERC20 or ERC721 tokens from a specified pool.
@@ -221,7 +232,7 @@ interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
         uint256 poolId,
         uint256[] calldata stakeIds
     )
-        external
+        external virtual
         returns (
             uint256 amountERC20,
             uint256[] memory idsERC721
@@ -268,5 +279,8 @@ interface IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs {
         uint256[] memory poolIds,
         uint256[][] memory rewardIds,
         address recipient
-    ) external returns (IERC20[][] memory tokens, uint256[][] memory amounts);
+    ) external virtual returns (
+        IERC20[][] memory tokens,
+        uint256[][] memory amounts
+    );
 }

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 pragma abicoder v2;
 
@@ -12,6 +12,7 @@ pragma abicoder v2;
  */
 interface IStaqeErrors {
     error InvalidStakeToken();
+    error InvalidStakeId();
     error InvalidERC721Token();
     error InvalidRewardToken();
     error InvalidMetadata();
@@ -23,10 +24,12 @@ interface IStaqeErrors {
     error RewardNotFoundInPool();
     error RewardAlreadyClaimed();
     error RewardIsNotYetAvailableForClaim();
-    error OnlyRewinderHasAccessToEditMetadata();
-    error OnlyRewinderHasAccessToAddRewards();
+    error OnlyOwnerHasAccessToEditMetadata();
+    error OnlyOwnerHasAccessToAddRewards();
     error StakerDoesNotHaveStakesInPool();
+    error StakeAlreadyUnstaked();
     error StakeTransferFailed();
+    error StakeOnNextBlockAfterReward();
     error UnstakeTransferFailed();
     error UnstakeOnNextBlockAndGetReward();
     error OnlyAvailableToStakersInGenesis();

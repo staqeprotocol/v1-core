@@ -2,21 +2,19 @@
 pragma solidity ^0.8.20;
 pragma abicoder v2;
 
-import {IStaqe, IERC20, IERC721, IERC165} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqe.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {Context} from "@openzeppelin/contracts/utils/Context.sol";
+import "@staqeprotocol/v1-core/contracts/interfaces/IStaqe.sol";
 
 /**
- *       _                                     _                  _
- *   ___| |_ __ _  __ _  ___   _ __  _ __ ___ | |_ ___   ___ ___ | |
- *  / __| __/ _` |/ _` |/ _ \ | '_ \| '__/ _ \| __/ _ \ / __/ _ \| |
- *  \__ \ || (_| | (_| |  __/ | |_) | | | (_) | || (_) | (_| (_) | |
- *  |___/\__\__,_|\__, |\___| | .__/|_|  \___/ \__\___/ \___\___/|_|
- *                   |_|      |_|
+ *       _
+ *   ___| |_ __ _  __ _  ___
+ *  / __| __/ _` |/ _` |/ _ \
+ *  \__ \ || (_| | (_| |  __/
+ *  |___/\__\__,_|\__, |\___|
+ *                   |_|
  *
- * @dev Implementation of the {IStaqe} interface.
+ * @dev Implementation of {IStaqe} interface.
  */
-contract Staqe is IStaqe, Context, ReentrancyGuard {
+contract Staqe is IStaqe {
     uint256 private _totalPools;
 
     /// @dev Associates pool IDs with `Pool` structs for staking pool configuration and state.
@@ -35,17 +33,13 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
     constructor(
         IERC20 stakeERC20,
         IERC721 stakeERC721,
-        IERC20 rewardToken,
-        address rewarder,
-        bytes32 metadata
-    ) {
+        IERC20 rewardToken
+    ) ERC721("Staqe Pools", "STQ") Ownable(msg.sender) {
         // Genesis Pool: Stake on this pool to get access to launch new pools.
         _pools[0] = Pool({
             stakeERC20: stakeERC20,
             stakeERC721: stakeERC721,
             rewardToken: rewardToken,
-            rewarder: rewarder,
-            metadata: metadata,
             totalStakedERC20: 0,
             totalStakedERC721: 0,
             launchBlock: block.number
@@ -80,15 +74,15 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
     function getPool(
         address staker,
         uint256 poolId
-    ) public view virtual returns (StakerPool memory poolDetails) {
+    ) public view virtual returns (PoolDetails memory poolDetails) {
         Pool memory p = _pools[poolId];
 
-        poolDetails = StakerPool({
+        poolDetails = PoolDetails({
             stakeERC20: p.stakeERC20,
             stakeERC721: p.stakeERC721,
             rewardToken: p.rewardToken,
-            rewarder: p.rewarder,
-            metadata: p.metadata,
+            rewarder: ownerOf(poolId),
+            metadata: tokenURI(poolId),
             totalStakedERC20: p.totalStakedERC20,
             totalStakedERC721: p.totalStakedERC721,
             totalRewards: _rewards[poolId].length,
@@ -122,26 +116,27 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         address staker,
         uint256 poolId,
         uint256 rewardId
-    ) public view virtual returns (StakerReward memory rewardDetails) {
+    ) public view virtual returns (RewardDetails memory rewardDetails) {
         Reward memory r = getReward(poolId, rewardId);
 
-        uint256 stakerAmount = 0;
+        uint256 stakerRewardAmount = 0;
         bool claimed = false;
 
-        try this.calculateReward(staker, poolId, rewardId) returns (IERC20, uint256 _amount) {
-            stakerAmount = _amount;
+        try this.calculateReward(staker, poolId, rewardId) returns (IERC20 rewardToken, uint256 _amount) {
+            r.rewardToken = rewardToken;
+            stakerRewardAmount = _amount;
         } catch {
             if (_isClaimed(staker, poolId, rewardId)) {
-                stakerAmount = _claimedAmount[staker][poolId][rewardId];
+                stakerRewardAmount = _claimedAmount[staker][poolId][rewardId];
                 claimed = true;
             }
         }
 
-        rewardDetails = StakerReward({
+        rewardDetails = RewardDetails({
             isForERC721Stakers: r.isForERC721Stakers,
             rewardToken: r.rewardToken,
             rewardAmount: r.rewardAmount,
-            stakerAmount: stakerAmount,
+            stakerRewardAmount: stakerRewardAmount,
             totalStaked: r.totalStaked,
             claimAfterBlocks: r.claimAfterBlocks,
             rewardBlock: r.rewardBlock,
@@ -209,15 +204,38 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
     }
 
     /**
+     * @dev See {IERC721Metadata-tokenURI}.
+     */
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override
+        returns (string memory)
+    {
+        return super.tokenURI(tokenId);
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    /**
      * @dev See {IStaqe-launchPool}.
      */
     function launchPool(
         IERC20 stakeERC20,
         IERC721 stakeERC721,
         IERC20 rewardToken,
-        address rewarder,
-        bytes32 metadata
-    ) external nonReentrant returns (uint256 poolId) {
+        string memory metadata
+    ) external override nonReentrant returns (uint256 poolId) {
         if (!_isActiveStaker(_msgSender(), 0)) {
             revert OnlyAvailableToStakersInGenesis();
         }
@@ -236,7 +254,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
             revert InvalidStakeToken();
         }
 
-        if (metadata == bytes32(0)) {
+        if (bytes(metadata).length == 0) {
             revert InvalidMetadata();
         }
 
@@ -246,44 +264,39 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
             stakeERC20: stakeERC20,
             stakeERC721: stakeERC721,
             rewardToken: rewardToken,
-            rewarder: rewarder,
-            metadata: metadata,
             totalStakedERC20: 0,
             totalStakedERC721: 0,
             launchBlock: block.number
         });
+        
+        _setTokenURI(poolId, metadata);
+        _safeMint(_msgSender(), poolId);
 
-        emit PoolLaunched(
-            poolId,
-            stakeERC20,
-            stakeERC721,
-            rewardToken,
-            rewarder,
-            metadata
-        );
+        emit Launched(poolId);
     }
 
     /**
      * @dev See {IStaqe-editPool}.
      */
-    function editPool(uint256 poolId, bytes32 metadata) external nonReentrant {
+    function editPool(
+        uint256 poolId,
+        string memory metadata
+    ) external override nonReentrant {
         Pool storage pool = _pools[poolId];
 
         if (pool.launchBlock <= 0) {
             revert PoolDoesNotExist();
         }
 
-        if (pool.metadata == metadata || metadata == bytes32(0)) {
+        if (bytes(metadata).length == 0) {
             revert InvalidMetadata();
         }
 
-        if (pool.rewarder == address(0) || pool.rewarder != _msgSender()) {
-            revert OnlyRewinderHasAccessToEditMetadata();
+        if (ownerOf(poolId) != _msgSender()) {
+            revert OnlyOwnerHasAccessToEditMetadata();
         }
 
-        pool.metadata = metadata;
-
-        emit PoolEdited(poolId, metadata);
+        _setTokenURI(poolId, metadata);
     }
 
     /**
@@ -293,7 +306,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         uint256 poolId,
         uint256 amount,
         uint256 id
-    ) public nonReentrant returns (uint256 stakeId) {
+    ) public override nonReentrant returns (uint256 stakeId) {
         Pool storage pool = _pools[poolId];
 
         if (pool.launchBlock <= 0) {
@@ -303,6 +316,17 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         if (amount <= 0 && id <= 0) {
             revert InvalidAmountOrId();
         }
+
+        if (
+            _rewards[poolId].length > 0 &&
+            _rewards[poolId][_rewards[poolId].length - 1].rewardBlock >= block.number
+        ) {
+            revert StakeOnNextBlockAfterReward();
+        }
+
+        // if (amount > 0 && address(pool.stakeERC20) == address(0)) {
+        //     revert InvalidAmountOrId();
+        // }
 
         stakeId = _stakes[_msgSender()][poolId].length;
 
@@ -329,7 +353,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
             pool.stakeERC721.transferFrom(_msgSender(), address(this), id);
         }
 
-        emit StakeCreated(_msgSender(), poolId, stakeId, amount, id);
+        emit Staked(_msgSender(), poolId, stakeId);
     }
 
     /**
@@ -341,7 +365,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         uint256 rewardAmount,
         uint256 claimAfterBlocks,
         bool isForERC721Stakers
-    ) public nonReentrant returns (uint256 rewardId) {
+    ) public override nonReentrant returns (uint256 rewardId) {
         Pool memory pool = _pools[poolId];
 
         if (pool.launchBlock <= 0) {
@@ -359,8 +383,8 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
             revert RewardIsEmpty();
         }
 
-        if (pool.rewarder != address(0) && pool.rewarder != _msgSender()) {
-            revert OnlyRewinderHasAccessToAddRewards();
+        if (ownerOf(poolId) != _msgSender()) {
+            revert OnlyOwnerHasAccessToAddRewards();
         }
 
         if (
@@ -395,16 +419,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
             revert RewardTransferFailed();
         }
 
-        emit RewardAdded(
-            poolId,
-            rewardId,
-            rewardToken,
-            rewardAmount,
-            pool.totalStakedERC20,
-            pool.totalStakedERC721,
-            isForERC721Stakers,
-            block.number + claimAfterBlocks
-        );
+        emit Rewarded(poolId, rewardId);
     }
 
     /**
@@ -415,18 +430,15 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         uint256[] calldata stakeIds
     )
         external
+        override
         nonReentrant
         returns (uint256 amountERC20, uint256[] memory idsERC721)
     {
         Pool memory pool = _pools[poolId];
 
         uint256 countERC721;
-        uint256[] memory allERC721;
 
-        (amountERC20, countERC721, allERC721) = _calculateUnstake(
-            poolId,
-            stakeIds
-        );
+        (amountERC20, countERC721, idsERC721) = _unstake(poolId, stakeIds);
 
         if (
             amountERC20 > 0 &&
@@ -436,19 +448,19 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         }
 
         if (countERC721 > 0) {
-            idsERC721 = new uint256[](countERC721);
-            for (uint256 i = 0; i < allERC721.length; i++) {
-                if (allERC721[i] <= 0) continue;
-                idsERC721[--countERC721] = allERC721[i];
+            for (uint256 i = 0; i < idsERC721.length; i++) {
+                if (idsERC721[i] <= 0) continue;
+
+                // slither-disable-next-line calls-loop
                 pool.stakeERC721.safeTransferFrom(
                     address(this),
                     _msgSender(),
-                    allERC721[i]
+                    idsERC721[i]
                 );
             }
         }
 
-        emit StakeWithdrawn(_msgSender(), poolId, amountERC20, countERC721);
+        emit Unstaked(_msgSender(), poolId);
     }
 
     /**
@@ -460,63 +472,49 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         address recipient
     )
         external
+        override
         nonReentrant
         returns (IERC20[][] memory tokens, uint256[][] memory amounts)
     {
-        if (recipient == address(0)) {
-            recipient = _msgSender();
-        }
+        if (recipient == address(0)) recipient = _msgSender();
 
-        tokens = new IERC20[][](poolIds.length);
-        amounts = new uint256[][](poolIds.length);
+        (tokens, amounts) = _calculateRewards(poolIds, rewardIds);
 
-        for (uint256 p = 0; p < poolIds.length; p++) {
-            tokens[p] = new IERC20[](rewardIds[p].length);
-            amounts[p] = new uint256[](rewardIds[p].length);
-            for (uint256 r = 0; r < rewardIds[p].length; r++) {
-                (tokens[p][r], amounts[p][r]) = _calculateReward(
-                    _msgSender(),
-                    poolIds[p],
-                    rewardIds[p][r]
-                );
-                _claimedAmount[_msgSender()][poolIds[p]][
-                    rewardIds[p][r]
-                ] = amounts[p][r];
-            }
-        }
+        _setClaimedAmounts(poolIds, rewardIds, amounts);
 
-        for (uint256 i = 0; i < poolIds.length; i++) {
-            IERC20 t = _pools[poolIds[i]].rewardToken;
+        for (uint256 poolIndex = 0; poolIndex < poolIds.length; poolIndex++) {
+            IERC20 rewardToken = _pools[poolIds[poolIndex]].rewardToken;
 
-            if (address(t) != address(0)) {
-                uint256 total = 0;
-                for (uint256 j = 0; j < amounts[i].length; j++) {
-                    total += amounts[i][j];
-                }
-                if (total <= 0) revert RewardIsEmpty();
-                if (!t.transfer(recipient, total)) {
-                    revert RewardTransferFailed();
-                }
-                emit RewardClaimed(_msgSender(), poolIds[i], 0, t, total);
-            } else {
-                for (uint256 j = 0; j < tokens[i].length; j++) {
-                    if (amounts[i][j] <= 0) revert RewardIsEmpty();
-                    if (!tokens[i][j].transfer(recipient, amounts[i][j])) {
+            if (address(rewardToken) == address(0)) {
+                for (uint256 rewardIndex = 0; rewardIndex < rewardIds[poolIndex].length; rewardIndex++) {
+                    uint256 amount = amounts[poolIndex][rewardIndex];
+
+                    if (amount <= 0) revert RewardIsEmpty();
+
+                    // slither-disable-next-line calls-loop
+                    if (!tokens[poolIndex][rewardIndex].transfer(recipient, amount)) {
                         revert RewardTransferFailed();
                     }
-                    emit RewardClaimed(
-                        _msgSender(),
-                        poolIds[i],
-                        rewardIds[i][j],
-                        tokens[i][j],
-                        amounts[i][j]
-                    );
+                }
+            } else {
+                uint256 totalAmount = 0;
+                for (uint256 rewardIndex = 0; rewardIndex < rewardIds[poolIndex].length; rewardIndex++) {
+                    totalAmount += amounts[poolIndex][rewardIndex];
+                }
+
+                if (totalAmount <= 0) revert RewardIsEmpty();
+
+                // slither-disable-next-line calls-loop
+                if (!rewardToken.transfer(recipient, totalAmount)) {
+                    revert RewardTransferFailed();
                 }
             }
+
+            emit Claimed(_msgSender(), poolIds[poolIndex]);
         }
     }
 
-    function _calculateUnstake(
+    function _unstake(
         uint256 poolId,
         uint256[] calldata stakeIds
     )
@@ -524,7 +522,7 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         returns (
             uint256 amountERC20,
             uint256 countERC721,
-            uint256[] memory allERC721
+            uint256[] memory idsERC721
         )
     {
         Reward[] memory rewards = _rewards[poolId];
@@ -545,26 +543,10 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         Stake[] storage stakes = _stakes[_msgSender()][poolId];
 
         if (stakeIds.length <= 0 || stakes.length <= 0) {
-            revert PoolDoesNotHaveStakes();
+            revert StakerDoesNotHaveStakesInPool();
         }
 
-        allERC721 = new uint256[](stakeIds.length);
-
-        for (uint256 i = 0; i < stakeIds.length; i++) {
-            if (stakeIds[i] >= stakes.length) continue;
-
-            Stake storage s = stakes[stakeIds[i]];
-
-            if (s.unstakeBlock > 0 || s.stakeBlock >= block.number) continue;
-
-            s.unstakeBlock = block.number;
-            amountERC20 += s.amountERC20;
-
-            if (s.idERC721 > 0) {
-                allERC721[i] = s.idERC721;
-                countERC721++;
-            }
-        }
+        (amountERC20, countERC721, idsERC721) = _calculateUnstake(poolId, stakeIds);
 
         if (amountERC20 <= 0 && countERC721 <= 0) {
             revert StakerDoesNotHaveStakesInPool();
@@ -572,6 +554,61 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
 
         if (amountERC20 > 0) pool.totalStakedERC20 -= amountERC20;
         if (countERC721 > 0) pool.totalStakedERC721 -= countERC721;
+    }
+
+    function _calculateUnstake(
+        uint256 poolId,
+        uint256[] calldata stakeIds
+    )
+        internal
+        returns (
+            uint256 amountERC20,
+            uint256 countERC721,
+            uint256[] memory idsERC721
+        )
+    {
+        idsERC721 = new uint256[](stakeIds.length);
+
+        for (uint256 stakeIndex = 0; stakeIndex < stakeIds.length; stakeIndex++) {
+            if (stakeIds[stakeIndex] >= _stakes[_msgSender()][poolId].length) {
+                revert InvalidStakeId();
+            }
+
+            Stake storage s = _stakes[_msgSender()][poolId][stakeIds[stakeIndex]];
+
+            if (s.unstakeBlock > 0 || s.stakeBlock >= block.number) {
+                revert StakeAlreadyUnstaked();
+            }
+
+            s.unstakeBlock = block.number;
+            amountERC20 += s.amountERC20;
+
+            if (s.idERC721 > 0) {
+                idsERC721[stakeIndex] = s.idERC721;
+                countERC721++;
+            }
+        }
+    }
+
+    function _calculateRewards(
+        uint256[] memory poolIds,
+        uint256[][] memory rewardIds
+    ) internal view returns (IERC20[][] memory tokens, uint256[][] memory amounts) {
+        tokens = new IERC20[][](poolIds.length);
+        amounts = new uint256[][](poolIds.length);
+
+        for (uint256 poolIndex = 0; poolIndex < poolIds.length; poolIndex++) {
+            tokens[poolIndex] = new IERC20[](rewardIds[poolIndex].length);
+            amounts[poolIndex] = new uint256[](rewardIds[poolIndex].length);
+
+            for (uint256 rewardIndex = 0; rewardIndex < rewardIds[poolIndex].length; rewardIndex++) {
+                (tokens[poolIndex][rewardIndex], amounts[poolIndex][rewardIndex]) = _calculateReward(
+                    _msgSender(),
+                    poolIds[poolIndex],
+                    rewardIds[poolIndex][rewardIndex]
+                );
+            }
+        }
     }
 
     function _calculateReward(
@@ -640,6 +677,20 @@ contract Staqe is IStaqe, Context, ReentrancyGuard {
         if (amount <= 0) revert RewardIsEmpty();
 
         token = reward.rewardToken;
+    }
+
+    function _setClaimedAmounts(
+        uint256[] memory poolIds,
+        uint256[][] memory rewardIds,
+        uint256[][] memory amounts
+    ) internal {
+        for (uint256 poolIndex = 0; poolIndex < poolIds.length; poolIndex++) {
+            for (uint256 rewardIndex = 0; rewardIndex < rewardIds[poolIndex].length; rewardIndex++) {
+                _claimedAmount[_msgSender()][poolIds[poolIndex]][
+                    rewardIds[poolIndex][rewardIndex]
+                ] = amounts[poolIndex][rewardIndex];
+            }
+        }
     }
 
     function _isClaimed(

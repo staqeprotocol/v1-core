@@ -1,4 +1,4 @@
 {
-    "detectors_to_exclude": "calls-loop,unused-return",
-    "exclude_informational": true
+  "filter_paths": "(openzeppelin-contracts)",
+  "exclude_informational": true
 }
