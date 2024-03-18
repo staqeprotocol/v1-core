@@ -91,36 +91,7 @@ abstract contract IStaqe is IStaqeEvents, IStaqeErrors, IStaqeStructs, IStaqeERC
     ) external virtual returns (
         uint256 poolId
     );
-
-    /**
-    * @dev Edits the metadata of an existing staking pool.
-    * This function allows the pool's rewarder to update the pool's metadata post-creation.
-    * Only the rewarder address associated with the pool has the authority to make this change.
-    *
-    * Emits a {IStaqeEvents-PoolEdited} event when the metadata is successfully updated.
-    *
-    * Requirements:
-    * - The pool specified by `poolId` must exist.
-    * - The caller must be the rewarder of the pool.
-    * - The new `metadata` must be different from the existing metadata and cannot be empty.
-    *
-    * @param poolId The ID of the pool whose metadata is being updated.
-    * @param totalMax Total max tokens in pool.
-    * @param metadata The new metadata for the pool. It must be different 
-    * from the current metadata and cannot be the zero bytes.
-    *
-    * @custom:error PoolDoesNotExist Indicates that the specified pool does not exist.
-    * @custom:error OnlyRewinderHasAccessToEditMetadata Indicates that only the rewarder 
-    * associated with the pool can edit its metadata.
-    * @custom:error InvalidMetadata Indicates that the provided metadata is invalid (e.g., 
-    * empty or the same as the current metadata).
-    */
-    function editPool(
-        uint256 poolId,
-        uint256 totalMax,
-        string memory metadata
-    ) external virtual;
-
+    
     /**
     * @dev Allows a user to stake ERC20 or ERC721 tokens into a specified pool.
     * This function records the user's stake in the pool, updating the pool's total staked 

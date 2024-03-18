@@ -218,18 +218,6 @@ contract Staqe is IStaqe {
     }
 
     /**
-     * @dev See {IERC165-supportsInterface}.
-     */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
-    }
-
-    /**
      * @dev See {IStaqe-launchPool}.
      */
     function launchPool(
@@ -294,7 +282,7 @@ contract Staqe is IStaqe {
         uint256 poolId,
         uint256 totalMax,
         string memory metadata
-    ) external override nonReentrant {
+    ) external nonReentrant {
         Pool storage pool = _pools[poolId];
 
         if (pool.launchBlock <= 0) {

@@ -212,9 +212,9 @@ abstract contract StaqeViews is Staqe {
     ) external view returns (uint256[] memory amounts) {
         amounts = new uint256[](getRewards(poolId).length);
         for (uint256 i = 0; i < amounts.length; i++) {
-            StakerReward memory reward = getReward(staker, poolId, i);
-            if (reward.stakerAmount > 0 && reward.claimed) {
-                amounts[i] = reward.stakerAmount;
+            RewardDetails memory reward = getReward(staker, poolId, i);
+            if (reward.stakerRewardAmount > 0 && reward.claimed) {
+                amounts[i] = reward.stakerRewardAmount;
             }
         }
     }

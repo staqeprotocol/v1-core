@@ -9,4 +9,13 @@ contract ERC20Mock is ERC20Permit {
     function mint(address to, uint256 amount) public {
         _mint(to, amount);
     }
+
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256, uint8, bytes32, bytes32
+    ) public override {
+        _approve(owner, spender, value);
+    }
 }
