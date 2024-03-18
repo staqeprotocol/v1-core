@@ -85,7 +85,7 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         staqe.launchPool(erc20, erc721, erc20, 0, "Test");
 
         vm.startPrank(user1);
-            vm.expectRevert();
+            vm.expectRevert(InvalidERC721Token.selector);
             staqe.launchPool(stakeA, IERC721(address(stakeB)), erc20, 100 ether, "Test");
 
             staqe.launchPool(stakeA, erc721, erc20, 100 ether, "Test");

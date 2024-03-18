@@ -744,6 +744,10 @@ contract Staqe is IStaqe {
     }
 
     function _isERC721(address contractAddress) internal view returns (bool) {
-        return IERC165(contractAddress).supportsInterface(0x80ac58cd);
+        try IERC165(contractAddress).supportsInterface(0x80ac58cd) returns (bool isERC721) {
+            return isERC721;
+        } catch {
+            return false;
+        }
     }
 }
