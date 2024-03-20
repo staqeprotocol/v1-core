@@ -272,7 +272,7 @@ contract Staqe is IStaqe {
         _setTokenURI(poolId, metadata);
         _safeMint(_msgSender(), poolId);
 
-        emit Launched(poolId);
+        emit Launched(_msgSender(), poolId);
     }
 
     /**
@@ -429,7 +429,7 @@ contract Staqe is IStaqe {
             revert RewardTransferFailed();
         }
 
-        emit Rewarded(poolId, rewardId);
+        emit Rewarded(_msgSender(), poolId, rewardId);
     }
 
     /**

@@ -12,6 +12,7 @@ pragma abicoder v2;
  */
 interface IStaqeEvents {
     event Launched(
+        address indexed launcher,
         uint256 indexed poolId
     );
 
@@ -22,6 +23,7 @@ interface IStaqeEvents {
     );
 
     event Rewarded(
+        address indexed rewarder,
         uint256 indexed poolId,
         uint256 indexed rewardId
     );
