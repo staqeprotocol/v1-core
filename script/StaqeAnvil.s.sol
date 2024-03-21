@@ -53,8 +53,7 @@ contract StaqeScript is Script {
         Staqe staqe = new Staqe(
             IERC20(address(0)),
             genesis,
-            IERC20(address(0)),
-            "Genesis Pool"
+            IERC20(address(0))
         );
         console.log("Staqe:", address(staqe));
 

@@ -18,7 +18,6 @@ contract StaqeProtocol is Staqe, StaqeDetails, StaqePermit {
     constructor(
         IERC20 stakeERC20,
         IERC721 stakeERC721,
-        IERC20 rewardToken,
-        string memory metadata
+        IERC20 rewardToken
     ) Staqe(stakeERC20, stakeERC721, rewardToken) {}
 }

@@ -38,7 +38,7 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
     function setUp() public {
         genesis = IERC721(address(new ERC721Mock("Genesis", "GNS")));
-        staqe = new Staqe(erc20, genesis, erc20, "Genesis");
+        staqe = new Staqe(erc20, genesis, erc20);
 
         address[4] memory addresses = [user1, user2, user3, user4];
 

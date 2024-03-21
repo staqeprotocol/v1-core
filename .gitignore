@@ -3,7 +3,7 @@ cache/
 out/*
 !out/Staqe.sol
 !out/StaqeProtocol.sol
-!out/StaqeViews.sol
+!out/StaqeDetails.sol
 !out/StaqePermit.sol
 !out/IStaqe.sol
 !out/IStaqeErrors.sol
