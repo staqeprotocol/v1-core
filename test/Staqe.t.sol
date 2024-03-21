@@ -105,7 +105,6 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
         assertEq(staqe.getTotalPools(), 1);
         assertEq(address(staqe.getPool(1).stakeERC20), address(stakeA));
-        assertEq(address(staqe.getPool(user1, 1).rewarder), address(user1));
 
         vm.expectRevert(OnlyOwnerHasAccessToEditMetadata.selector);
         staqe.editPool(1, 10 ether, "New Metadata");
@@ -120,7 +119,6 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
             staqe.editPool(1, 10 ether, "New Metadata");
         vm.stopPrank();
 
-        assertEq(bytes(staqe.getPool(user1, 1).metadata).length, bytes("New Metadata").length);
         assertEq(bytes(staqe.tokenURI(1)).length, bytes("New Metadata").length);
 
         vm.roll(blockId++);
@@ -170,13 +168,11 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
             staqe.addReward(1, rewardA, 10 ether, 0, false);
         vm.stopPrank();
 
-        assertEq(staqe.getReward(user2, 1, 0).stakerRewardAmount, 0);
+        assertEq(staqe.getClaimedAmount(user2, 1, 0), 0);
 
         vm.roll(blockId++);
 
         assertEq(staqe.getReward(1, 0).totalStaked, 100 ether);
-        assertEq(staqe.getReward(user2, 1, 0).stakerRewardAmount, 10 ether);
-        assertEq(staqe.getReward(user2, 1, 0).claimed, false);
 
         Reward[] memory rewards = staqe.getRewards(1);
         assertEq(rewards[0].rewardAmount, 10 ether);
@@ -239,12 +235,6 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
         assertEq(staqe.getReward(1, 0).rewardAmount, 190 ether);
         assertEq(staqe.getReward(1, 1).rewardAmount, 100 ether);
-
-        assertEq(staqe.getReward(user2, 1, 0).stakerRewardAmount, 180 ether);
-        assertEq(staqe.getReward(user2, 1, 1).stakerRewardAmount, 90 ether);
-
-        assertEq(staqe.getReward(user3, 1, 0).stakerRewardAmount, 10 ether);
-        assertEq(staqe.getReward(user3, 1, 1).stakerRewardAmount, 10 ether);
     }
 
     function test_Claim() public {
@@ -313,6 +303,9 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
         assertEq(balanceA, 180 ether);
         assertEq(balanceB, 45 ether);
+
+        assertEq(staqe.getClaimedAmount(user3, 1, 0), 180 ether);
+        assertEq(staqe.getClaimedAmount(user4, 2, 0), 45 ether);
     }
 
     function test_Unstake() public {
@@ -406,5 +399,70 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         Staqe.Reward[] memory rewards = staqe.getRewards(1);
         assertEq(rewards.length, 1);
         assertEq(rewards[0].rewardAmount, 50 ether);
+    }
+
+    function test_StaqeViews() public {
+        vm.startPrank(user1);
+            staqe.launchPool(stakeA, erc721, erc20, 0, "Test 1");
+        vm.stopPrank();
+
+        vm.startPrank(user2);
+            staqe.launchPool(erc20, nftA, rewardB, 2, "Test 2");
+        vm.stopPrank();
+
+        vm.roll(blockId++);
+
+        vm.startPrank(user3);
+            staqe.stake(1, 90 ether, 0);
+            staqe.stake(2, 0, 33);
+        vm.stopPrank();
+
+        vm.roll(blockId++);
+
+        vm.startPrank(user1);
+            staqe.addReward(1, rewardA, 190 ether, 0, false);
+        vm.stopPrank();
+
+        vm.roll(blockId++);
+
+        vm.startPrank(user2);
+            staqe.addReward(2, rewardB, 90 ether, 0, true);
+        vm.stopPrank();
+
+        vm.roll(blockId++);
+
+        uint256[] memory poolIds = new uint256[](1);
+        uint256[][] memory rewardIds = new uint256[][](1);
+        rewardIds[0] = new uint256[](1);
+        rewardIds[0][0] = 0;
+
+        vm.startPrank(user3);
+            poolIds[0] = 1;
+            staqe.claimRewards(poolIds, rewardIds, user4);
+        vm.stopPrank();
+
+        Staqe.PoolDetails memory pool1 = staqe.getPool(user3, 1);
+        Staqe.PoolDetails memory pool2 = staqe.getPool(user3, 2);
+
+        Staqe.RewardDetails memory reward1 = staqe.getReward(user3, 1, 0);
+        Staqe.RewardDetails memory reward2 = staqe.getReward(user3, 2, 0);
+
+        (IERC20 token, uint256 amount) = staqe.calculateReward(user3, 2, 0);
+
+        Staqe.Token memory tokenInfo = staqe.tokenInfo(user4, rewardA, IERC721(address(0)));
+
+        assertEq(bytes(pool1.metadata).length, bytes("Test 1").length);
+        assertEq(pool1.totalStakedERC20, 90 ether);
+
+        assertEq(pool2.totalMax, 2);
+        assertEq(pool2.totalStakedERC721, 1);
+
+        assertEq(reward1.rewardToken.token, address(rewardA));
+        assertEq(reward2.rewardToken.token, address(rewardB));
+
+        assertEq(address(token), address(rewardB));
+        assertEq(amount, 90 ether);
+
+        assertEq(tokenInfo.balanceOf, 10190 ether);
     }
 }

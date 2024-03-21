@@ -12,6 +12,7 @@ import {IStaqeERC721} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqeER
 import {IStaqeERC7572} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqeERC7572.sol";
 import {IStaqeReentrancy} from "@staqeprotocol/v1-core/contracts/interfaces/IStaqeReentrancy.sol";
 
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 

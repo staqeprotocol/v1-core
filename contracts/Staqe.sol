@@ -27,8 +27,7 @@ contract Staqe is IStaqe {
     mapping(address => mapping(uint256 => Stake[])) private _stakes;
 
     /// @dev Indicates claimed rewards by a staker in a pool, keyed by pool and reward indices, to avoid double claims.
-    mapping(address => mapping(uint256 => mapping(uint256 => uint256)))
-        private _claimedAmount;
+    mapping(address => mapping(uint256 => mapping(uint256 => uint256))) private _claimedAmount;
 
     constructor(
         IERC20 stakeERC20,
@@ -56,6 +55,22 @@ contract Staqe is IStaqe {
     }
 
     /**
+     * @notice Retrieves the amount of rewards that have already been claimed 
+     *         by a staker for a specific reward in a pool.
+     * @param staker The address of the staker.
+     * @param poolId The ID of the pool.
+     * @param rewardId The ID of the reward within the pool.
+     * @return _ The amount of rewards claimed by the staker for the specified reward in the pool.
+     */
+    function getClaimedAmount(
+        address staker,
+        uint256 poolId,
+        uint256 rewardId
+    ) public view returns (uint256) {
+        return _claimedAmount[staker][poolId][rewardId];
+    }
+
+    /**
      * @notice Retrieves details of a specific pool by its ID.
      * @param poolId The ID of the pool to retrieve.
      * @return poolDetails The details of the specified pool.
@@ -64,33 +79,6 @@ contract Staqe is IStaqe {
         uint256 poolId
     ) public view virtual returns (Pool memory poolDetails) {
         poolDetails = _pools[poolId];
-    }
-
-    /**
-     * @notice Retrieves pool details for a specific staker by pool ID.
-     * @param staker The address of the staker.
-     * @param poolId The ID of the pool to retrieve information for.
-     * @return poolDetails Detailed information about the pool specific to the staker.
-     */
-    function getPool(
-        address staker,
-        uint256 poolId
-    ) public view virtual returns (PoolDetails memory poolDetails) {
-        Pool memory p = _pools[poolId];
-
-        poolDetails = PoolDetails({
-            stakeERC20: p.stakeERC20,
-            stakeERC721: p.stakeERC721,
-            rewardToken: p.rewardToken,
-            rewarder: ownerOf(poolId),
-            metadata: tokenURI(poolId),
-            totalMax: p.totalMax,
-            totalStakedERC20: p.totalStakedERC20,
-            totalStakedERC721: p.totalStakedERC721,
-            totalRewards: _rewards[poolId].length,
-            totalStakerStakes: _stakes[staker][poolId].length,
-            launchBlock: p.launchBlock
-        });
     }
 
     /**
@@ -105,45 +93,6 @@ contract Staqe is IStaqe {
     ) public view virtual returns (Reward memory rewardDetails) {
         if (rewardId < _rewards[poolId].length)
             rewardDetails = _rewards[poolId][rewardId];
-    }
-
-    /**
-     * @notice Retrieves reward details for a specific staker in a given pool.
-     * @param staker The address of the staker.
-     * @param poolId The ID of the pool containing the reward.
-     * @param rewardId The ID of the reward within the pool.
-     * @return rewardDetails Detailed information about the reward specific to the staker.
-     */
-    function getReward(
-        address staker,
-        uint256 poolId,
-        uint256 rewardId
-    ) public view virtual returns (RewardDetails memory rewardDetails) {
-        Reward memory r = getReward(poolId, rewardId);
-
-        uint256 stakerRewardAmount = 0;
-        bool claimed = false;
-
-        try this.calculateReward(staker, poolId, rewardId) returns (IERC20 rewardToken, uint256 _amount) {
-            r.rewardToken = rewardToken;
-            stakerRewardAmount = _amount;
-        } catch {
-            if (_isClaimed(staker, poolId, rewardId)) {
-                stakerRewardAmount = _claimedAmount[staker][poolId][rewardId];
-                claimed = true;
-            }
-        }
-
-        rewardDetails = RewardDetails({
-            isForERC721Stakers: r.isForERC721Stakers,
-            rewardToken: r.rewardToken,
-            rewardAmount: r.rewardAmount,
-            stakerRewardAmount: stakerRewardAmount,
-            totalStaked: r.totalStaked,
-            claimAfterBlocks: r.claimAfterBlocks,
-            rewardBlock: r.rewardBlock,
-            claimed: claimed
-        });
     }
 
     /**
@@ -185,36 +134,6 @@ contract Staqe is IStaqe {
         uint256 poolId
     ) public view virtual returns (Stake[] memory) {
         return _stakes[staker][poolId];
-    }
-
-    /**
-     * @notice Calculates the reward for a staker in a given pool.
-     * @dev This function is an external wrapper around `_calculateReward`,
-     *      necessary for try/catch in `getReward`.
-     * @param staker The address of the staker.
-     * @param poolId The ID of the pool.
-     * @param rewardId The ID of the reward within the pool.
-     * @return token The ERC20 token in which the reward is denominated.
-     * @return amount The amount of reward the staker is eligible to claim.
-     */
-    function calculateReward(
-        address staker,
-        uint256 poolId,
-        uint256 rewardId
-    ) external view returns (IERC20, uint256) {
-        return _calculateReward(staker, poolId, rewardId);
-    }
-
-    /**
-     * @dev See {IERC721Metadata-tokenURI}.
-     */
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override
-        returns (string memory)
-    {
-        return super.tokenURI(tokenId);
     }
 
     /**
@@ -626,7 +545,7 @@ contract Staqe is IStaqe {
         uint256 poolId,
         uint256 rewardId
     ) internal view returns (IERC20 token, uint256 amount) {
-        if (_isClaimed(staker, poolId, rewardId)) {
+        if (_claimedAmount[staker][poolId][rewardId] > 0) {
             revert RewardAlreadyClaimed();
         }
 
@@ -650,25 +569,8 @@ contract Staqe is IStaqe {
 
         for (uint256 i = 0; i < stakes.length; i++) {
             Stake memory s = stakes[i];
-            /**
-             * If `>=` a potential attack scenario in the same block:
-             * - User1 Stake 100 TKN
-             * - Total Stake 200 TKN
-             * - User1 Unstake 100 TKN
-             * - Total Stake 100 TKN
-             * - Add Reward 10 RWD
-             * - User1 claim 100 TKN / 100 TKN * 10 RWD = 10 RWD
-             */
             bool isUnstakedAfterReward = s.unstakeBlock <= 0 ||
                 s.unstakeBlock > reward.rewardBlock;
-            /**
-             * If `<=` is not a problem in the same block:
-             * - User1 Stake 100 TKN
-             * - Total Stake 200 TKN
-             * - User1 Unstake 100 TKN (REVERT stakeBlock == unstakeBlock)
-             * - Add Reward 10 RWD
-             * - User1 claim 100 TKN / 200 TKN * 10 RWD = 5 RWD
-             */
             bool isStakedBeforeReward = s.stakeBlock <= reward.rewardBlock;
             bool isStakeERC20 = !reward.isForERC721Stakers && s.amountERC20 > 0;
             bool isStakeERC721 = reward.isForERC721Stakers && s.idERC721 > 0;
@@ -701,14 +603,6 @@ contract Staqe is IStaqe {
                 ] = amounts[poolIndex][rewardIndex];
             }
         }
-    }
-
-    function _isClaimed(
-        address staker,
-        uint256 poolId,
-        uint256 rewardId
-    ) internal view returns (bool) {
-        return _claimedAmount[staker][poolId][rewardId] > 0;
     }
 
     function _isActiveStaker(
