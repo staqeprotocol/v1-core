@@ -106,16 +106,16 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         assertEq(staqe.getTotalPools(), 1);
         assertEq(address(staqe.getPool(1).stakeERC20), address(stakeA));
 
+        vm.expectRevert(PoolDoesNotExist.selector);
+        staqe.editPool(2, 10 ether, "New Metadata");
+
+        vm.expectRevert(InvalidMetadata.selector);
+        staqe.editPool(1, 10 ether, "");
+
         vm.expectRevert(OnlyOwnerHasAccessToEditMetadata.selector);
         staqe.editPool(1, 10 ether, "New Metadata");
 
         vm.startPrank(user1);
-            vm.expectRevert(PoolDoesNotExist.selector);
-            staqe.editPool(2, 10 ether, "New Metadata");
-
-            vm.expectRevert(InvalidMetadata.selector);
-            staqe.editPool(1, 10 ether, "");
-
             staqe.editPool(1, 10 ether, "New Metadata");
         vm.stopPrank();
 
@@ -451,18 +451,18 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
         Staqe.Token memory tokenInfo = staqe.tokenInfo(user4, rewardA, IERC721(address(0)));
 
-        assertEq(bytes(pool1.metadata).length, bytes("Test 1").length);
+        assertEq(bytes(pool1.tokenURI).length, bytes("Test 1").length);
         assertEq(pool1.totalStakedERC20, 90 ether);
 
         assertEq(pool2.totalMax, 2);
         assertEq(pool2.totalStakedERC721, 1);
 
-        assertEq(reward1.rewardToken.token, address(rewardA));
-        assertEq(reward2.rewardToken.token, address(rewardB));
+        assertEq(reward1.rewardToken.tokenAddress, address(rewardA));
+        assertEq(reward2.rewardToken.tokenAddress, address(rewardB));
 
         assertEq(address(token), address(rewardB));
         assertEq(amount, 90 ether);
 
-        assertEq(tokenInfo.balanceOf, 10190 ether);
+        assertEq(tokenInfo.balance, 10190 ether);
     }
 }

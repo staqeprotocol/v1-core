@@ -18,13 +18,21 @@ import {ERC721Mock, IERC165} from "../test/mock/ERC721Mock.sol";
   *      Genesis NFT: 0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e
   *      Staqe: 0x9A676e781A523b5d0C0e43731313A708CB607508
  */
-contract StaqeScript is Script {
+contract StaqeAnvilScript is Script {
     function run() external {
         address anvilUser1 = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
         address anvilUser2 = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
 
         uint256 privateKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
         string memory ipfs = "ipfs://QmNXi1bErHzBq1MFN4GGZAcXko6iF6B3Rp3A3et1ZuMJtt";
+
+        uint256[] memory poolIds = new uint256[](1);
+        poolIds[0] = 3;
+        uint256[][] memory rewardIds = new uint256[][](1);
+        rewardIds[0] = new uint256[](1);
+        rewardIds[0][0] = 0;
+        uint256[] memory stakeIds = new uint256[](1);
+        stakeIds[0] = 1;
         
         vm.startBroadcast(privateKey);
 
@@ -71,6 +79,7 @@ contract StaqeScript is Script {
         staqe.stake(1, 10 ether, 0);
         staqe.stake(2, 0, 1);
         staqe.stake(3, 10 ether, 2);
+        staqe.stake(3, 20 ether, 3);
 
         staqe.addReward(1, reward, 100 ether, 0, false);
         staqe.addReward(2, stake, 50 ether, 0, true);

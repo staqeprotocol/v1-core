@@ -14,22 +14,22 @@ import {Staqe, ERC20, ERC721, IERC20, IERC721} from "@staqeprotocol/v1-core/cont
  */
 abstract contract StaqeDetails is Staqe {
     struct Token {
-        address token;
+        address tokenAddress;
         string name;
         string symbol;
         uint256 decimals;
-        uint256 balanceOf;
+        uint256 balance;
         bool isApproved;
     }
 
     struct PoolDetails {
-        Token stakeERC20;          // Add extended info about token
-        Token stakeERC721;         // Add extended info about token
-        Token rewardToken;         // Add extended info about token
-        address rewarder;          // Add Rewarder from ERC721
-        string metadata;           // Add IPFS CID Metadata from ERC721
-        uint256 totalRewards;      // Add Total Rewards
-        uint256 totalStakerStakes; // Add Total Number Of Staker Stakes
+        Token stakeERC20;
+        Token stakeERC721;
+        Token rewardToken;
+        address owner;
+        string tokenURI;
+        uint256 totalRewards;
+        uint256 totalStakerStakes;
         uint256 totalMax;
         uint256 totalStakedERC20;
         uint256 totalStakedERC721;
@@ -37,9 +37,9 @@ abstract contract StaqeDetails is Staqe {
     }
 
     struct RewardDetails {
-        Token rewardToken;          // Add extended info about token
-        uint256 stakerRewardAmount; // Add Staker Reward Amount
-        bool isClaimed;             // Add Staker Is Claimed or Not
+        Token rewardToken;
+        uint256 stakerRewardAmount;
+        bool isClaimed;
         bool isForERC721Stakers;
         uint256 rewardAmount;
         uint256 totalStaked;
@@ -66,22 +66,22 @@ abstract contract StaqeDetails is Staqe {
         if (address(ierc20) != address(0) && address(ierc721) == address(0)) {
             ERC20 erc20 = ERC20(address(ierc20));
             token = Token({
-                token: address(erc20),
+                tokenAddress: address(erc20),
                 name: erc20.name(),
                 symbol: erc20.symbol(),
                 decimals: erc20.decimals(),
-                balanceOf: erc20.balanceOf(user),
+                balance: erc20.balanceOf(user),
                 isApproved: erc20.allowance(user, address(this)) == type(uint256).max
             });
         }
         if (address(ierc721) != address(0) && address(ierc20) == address(0)) {
             ERC721 erc721 = ERC721(address(ierc721));
             token = Token({
-                token: address(erc721),
+                tokenAddress: address(erc721),
                 name: erc721.name(),
                 symbol: erc721.symbol(),
                 decimals: 0,
-                balanceOf: erc721.balanceOf(user),
+                balance: erc721.balanceOf(user),
                 isApproved: erc721.isApprovedForAll(user, address(this))
             });
         }
@@ -103,8 +103,8 @@ abstract contract StaqeDetails is Staqe {
             stakeERC20: tokenInfo(staker, p.stakeERC20, IERC721(address(0))),
             stakeERC721: tokenInfo(staker, IERC20(address(0)), p.stakeERC721),
             rewardToken: tokenInfo(staker, p.stakeERC20, IERC721(address(0))),
-            rewarder: ownerOf(poolId),
-            metadata: tokenURI(poolId),
+            owner: ownerOf(poolId),
+            tokenURI: tokenURI(poolId),
             totalMax: p.totalMax,
             totalStakedERC20: p.totalStakedERC20,
             totalStakedERC721: p.totalStakedERC721,
