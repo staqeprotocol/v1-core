@@ -83,7 +83,8 @@ contract StaqeAnvilScript is Script {
 
         staqe.addReward(1, reward, 100 ether, 0, false);
         staqe.addReward(2, stake, 50 ether, 0, true);
-        staqe.addReward(3, stake, 10 ether, 0, false);
+        staqe.addReward(3, stake, 11 ether, 0, true);
+        staqe.addReward(3, stake, 33 ether, 0, false);
 
         vm.stopBroadcast();
     }

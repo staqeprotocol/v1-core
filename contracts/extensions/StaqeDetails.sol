@@ -99,12 +99,23 @@ abstract contract StaqeDetails is Staqe {
     ) public view virtual returns (PoolDetails memory poolDetails) {
         Pool memory p = getPool(poolId);
 
+        address owner;
+        string memory tokenURI;
+
+        try this.ownerOf(poolId) returns (address _owner) {
+            owner = _owner;
+        } catch {}
+
+        try this.tokenURI(poolId) returns (string memory _tokenURI) {
+            tokenURI = _tokenURI;
+        } catch {}
+
         poolDetails = PoolDetails({
             stakeERC20: tokenInfo(staker, p.stakeERC20, IERC721(address(0))),
             stakeERC721: tokenInfo(staker, IERC20(address(0)), p.stakeERC721),
             rewardToken: tokenInfo(staker, p.rewardToken, IERC721(address(0))),
-            owner: ownerOf(poolId),
-            tokenURI: tokenURI(poolId),
+            owner: owner,
+            tokenURI: tokenURI,
             totalMax: p.totalMax,
             totalStakedERC20: p.totalStakedERC20,
             totalStakedERC721: p.totalStakedERC721,
