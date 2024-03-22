@@ -99,13 +99,15 @@ abstract contract StaqeDetails is Staqe {
     ) public view virtual returns (PoolDetails memory poolDetails) {
         Pool memory p = getPool(poolId);
 
-        address owner;
-        string memory tokenURI;
+        address owner = address(0);
+        string memory tokenURI = "";
 
+        // slither-disable-next-line var-read-using-this
         try this.ownerOf(poolId) returns (address _owner) {
             owner = _owner;
         } catch {}
 
+        // slither-disable-next-line var-read-using-this
         try this.tokenURI(poolId) returns (string memory _tokenURI) {
             tokenURI = _tokenURI;
         } catch {}
