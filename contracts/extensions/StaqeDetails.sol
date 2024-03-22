@@ -81,8 +81,8 @@ abstract contract StaqeDetails is Staqe {
                 name: erc721.name(),
                 symbol: erc721.symbol(),
                 decimals: 0,
-                balance: erc721.balanceOf(user),
-                isApproved: erc721.isApprovedForAll(user, address(this))
+                balance: address(user) == address(0) ? 0 : erc721.balanceOf(user),
+                isApproved: address(user) == address(0) ? false : erc721.isApprovedForAll(user, address(this))
             });
         }
     }
