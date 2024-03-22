@@ -102,7 +102,7 @@ abstract contract StaqeDetails is Staqe {
         poolDetails = PoolDetails({
             stakeERC20: tokenInfo(staker, p.stakeERC20, IERC721(address(0))),
             stakeERC721: tokenInfo(staker, IERC20(address(0)), p.stakeERC721),
-            rewardToken: tokenInfo(staker, p.stakeERC20, IERC721(address(0))),
+            rewardToken: tokenInfo(staker, p.rewardToken, IERC721(address(0))),
             owner: ownerOf(poolId),
             tokenURI: tokenURI(poolId),
             totalMax: p.totalMax,
