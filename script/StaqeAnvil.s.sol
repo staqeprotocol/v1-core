@@ -75,6 +75,8 @@ contract StaqeAnvilScript is Script {
         staqe.launchPool(stake, IERC721(address(0)), reward, 100 ether, ipfs);
         staqe.launchPool(IERC20(address(0)), nft, stake, 2, ipfs);
         staqe.launchPool(stake, nft, IERC20(address(0)), 0, ipfs);
+        staqe.launchPool(stake, IERC721(address(0)), IERC20(address(0)), 0, ipfs);
+        staqe.launchPool(IERC20(address(0)), nft, IERC20(address(0)), 0, ipfs);
 
         staqe.stake(1, 10 ether, 0);
         staqe.stake(2, 0, 1);
@@ -83,8 +85,10 @@ contract StaqeAnvilScript is Script {
 
         staqe.addReward(1, reward, 100 ether, 0, false);
         staqe.addReward(2, stake, 50 ether, 0, true);
+        staqe.addReward(2, stake, 10 ether, 0, true);
         staqe.addReward(3, stake, 11 ether, 0, true);
         staqe.addReward(3, stake, 33 ether, 0, false);
+        staqe.addReward(3, stake, 22 ether, 0, false);
 
         vm.stopBroadcast();
     }
