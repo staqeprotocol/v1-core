@@ -94,7 +94,7 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
             vm.expectRevert(InvalidStakeToken.selector);
             staqe.launchPool(erc20, erc721, erc20, 100 ether, "Test");
 
-            vm.expectRevert(InvalidMetadata.selector);
+            vm.expectRevert(InvalidTokenURI.selector);
             staqe.launchPool(stakeA, erc721, erc20, 100 ether, "");
 
             vm.expectRevert(TotalMaxForOnlyOneTypeOfToken.selector);
@@ -107,19 +107,19 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         assertEq(address(staqe.getPool(1).stakeERC20), address(stakeA));
 
         vm.expectRevert(PoolDoesNotExist.selector);
-        staqe.editPool(2, 10 ether, "New Metadata");
+        staqe.editPool(2, 10 ether, "New TokenURI");
 
-        vm.expectRevert(InvalidMetadata.selector);
+        vm.expectRevert(InvalidTokenURI.selector);
         staqe.editPool(1, 10 ether, "");
 
-        vm.expectRevert(OnlyOwnerHasAccessToEditMetadata.selector);
-        staqe.editPool(1, 10 ether, "New Metadata");
+        vm.expectRevert(OnlyOwnerHasAccessToEditTokenURI.selector);
+        staqe.editPool(1, 10 ether, "New TokenURI");
 
         vm.startPrank(user1);
-            staqe.editPool(1, 10 ether, "New Metadata");
+            staqe.editPool(1, 10 ether, "New TokenURI");
         vm.stopPrank();
 
-        assertEq(bytes(staqe.tokenURI(1)).length, bytes("New Metadata").length);
+        assertEq(bytes(staqe.tokenURI(1)).length, bytes("New TokenURI").length);
 
         vm.roll(blockId++);
 

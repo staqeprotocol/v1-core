@@ -1,11 +1,11 @@
 {
   "name": "@staqeprotocol/v1-core",
   "description": "🗄️ Core smart contracts of Staqe V1",
-  "license": "BUSL-1.1",
+  "license": "MIT",
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.2.9",
+  "version": "1.2.10",
   "homepage": "https://staqe.app",
   "keywords": [
     "staqe",

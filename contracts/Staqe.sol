@@ -144,7 +144,7 @@ contract Staqe is IStaqe {
         IERC721 stakeERC721,
         IERC20 rewardToken,
         uint256 totalMax,
-        string memory metadata
+        string memory tokenURI
     ) external override nonReentrant returns (uint256 poolId) {
         if (!_isActiveStaker(_msgSender(), 0)) {
             revert OnlyAvailableToStakersInGenesis();
@@ -164,8 +164,8 @@ contract Staqe is IStaqe {
             revert InvalidStakeToken();
         }
 
-        if (bytes(metadata).length == 0) {
-            revert InvalidMetadata();
+        if (bytes(tokenURI).length == 0) {
+            revert InvalidTokenURI();
         }
 
         if (
@@ -188,7 +188,7 @@ contract Staqe is IStaqe {
             launchBlock: block.number
         });
         
-        _setTokenURI(poolId, metadata);
+        _setTokenURI(poolId, tokenURI);
         _safeMint(_msgSender(), poolId);
 
         emit Launched(_msgSender(), poolId);
@@ -200,7 +200,7 @@ contract Staqe is IStaqe {
     function editPool(
         uint256 poolId,
         uint256 totalMax,
-        string memory metadata
+        string memory tokenURI
     ) external nonReentrant {
         Pool storage pool = _pools[poolId];
 
@@ -208,19 +208,19 @@ contract Staqe is IStaqe {
             revert PoolDoesNotExist();
         }
 
-        if (bytes(metadata).length == 0) {
-            revert InvalidMetadata();
+        if (bytes(tokenURI).length == 0) {
+            revert InvalidTokenURI();
         }
 
         if (ownerOf(poolId) != _msgSender()) {
-            revert OnlyOwnerHasAccessToEditMetadata();
+            revert OnlyOwnerHasAccessToEditTokenURI();
         }
 
         if (totalMax > pool.totalMax) {
             pool.totalMax = totalMax;
         }
 
-        _setTokenURI(poolId, metadata);
+        _setTokenURI(poolId, tokenURI);
     }
 
     /**

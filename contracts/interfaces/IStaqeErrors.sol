@@ -15,7 +15,7 @@ interface IStaqeErrors {
     error InvalidStakeId();
     error InvalidERC721Token();
     error InvalidRewardToken();
-    error InvalidMetadata();
+    error InvalidTokenURI();
     error InvalidAmountOrId();
     error PoolDoesNotExist();
     error PoolDoesNotHaveStakes();
@@ -24,7 +24,7 @@ interface IStaqeErrors {
     error RewardNotFoundInPool();
     error RewardAlreadyClaimed();
     error RewardIsNotYetAvailableForClaim();
-    error OnlyOwnerHasAccessToEditMetadata();
+    error OnlyOwnerHasAccessToEditTokenURI();
     error OnlyOwnerHasAccessToAddRewards();
     error StakerDoesNotHaveStakesInPool();
     error StakeAlreadyUnstaked();
