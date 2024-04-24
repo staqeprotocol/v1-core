@@ -6,27 +6,27 @@ import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC2
 import {Staqe, IERC20} from "@staqeprotocol/v1-core/contracts/Staqe.sol";
 
 /**
- *       _                                               _ _   
- *   ___| |_ __ _  __ _  ___   _ __   ___ _ __ _ __ ___ (_) |_ 
+ *       _                                               _ _
+ *   ___| |_ __ _  __ _  ___   _ __   ___ _ __ _ __ ___ (_) |_
  *  / __| __/ _` |/ _` |/ _ \ | '_ \ / _ \ '__| '_ ` _ \| | __|
- *  \__ \ || (_| | (_| |  __/ | |_) |  __/ |  | | | | | | | |_ 
+ *  \__ \ || (_| | (_| |  __/ | |_) |  __/ |  | | | | | | | |_
  *  |___/\__\__,_|\__, |\___| | .__/ \___|_|  |_| |_| |_|_|\__|
- *                   |_|      |_|                              
+ *                   |_|      |_|
  */
 abstract contract StaqePermit is Staqe {
     /**
-    * @notice Stakes tokens in a pool with a permit, combining ERC20 token approval and staking in a single transaction.
-    * @dev Function stake(...) uses the nonReentrant modifier from OpenZeppelin to prevent reentrancy attacks.
-    * @param poolId The ID of the pool in which to stake tokens.
-    * @param amount The amount of tokens to stake in the pool.
-    * @param deadline The time by which the permit must be used before it expires. This is typically a timestamp.
-    * @param v The recovery byte of the signature, part of the ECDSA signature components.
-    * @param r Half of the ECDSA signature pair, specifically the first 32 bytes.
-    * @param s Half of the ECDSA signature pair, specifically the second 32 bytes.
-    * @param max If set to true, the permit will approve the maximum uint256 value, allowing unlimited transfers. 
-    *            If false, the permit will only approve the specified amount.
-    * @return stakeId The ID of the newly created stake record.
-    */
+     * @notice Stakes tokens in a pool with a permit, combining ERC20 token approval and staking in a single transaction.
+     * @dev Function stake(...) uses the nonReentrant modifier from OpenZeppelin to prevent reentrancy attacks.
+     * @param poolId The ID of the pool in which to stake tokens.
+     * @param amount The amount of tokens to stake in the pool.
+     * @param deadline The time by which the permit must be used before it expires. This is typically a timestamp.
+     * @param v The recovery byte of the signature, part of the ECDSA signature components.
+     * @param r Half of the ECDSA signature pair, specifically the first 32 bytes.
+     * @param s Half of the ECDSA signature pair, specifically the second 32 bytes.
+     * @param max If set to true, the permit will approve the maximum uint256 value, allowing unlimited transfers.
+     *            If false, the permit will only approve the specified amount.
+     * @return stakeId The ID of the newly created stake record.
+     */
     function stakeWithPermit(
         uint256 poolId,
         uint256 amount,
@@ -42,7 +42,10 @@ abstract contract StaqePermit is Staqe {
             address(this),
             max ? type(uint256).max : amount,
             deadline,
-            v, r, s);
+            v,
+            r,
+            s
+        );
         stakeId = stake(poolId, amount, 0);
     }
 
@@ -79,7 +82,16 @@ abstract contract StaqePermit is Staqe {
             address(this),
             max ? type(uint256).max : rewardAmount,
             deadline,
-            v, r, s);
-        rewardId = addReward(poolId, rewardToken, rewardAmount, claimAfterBlocks, isForERC721Stakers);
+            v,
+            r,
+            s
+        );
+        rewardId = addReward(
+            poolId,
+            rewardToken,
+            rewardAmount,
+            claimAfterBlocks,
+            isForERC721Stakers
+        );
     }
 }

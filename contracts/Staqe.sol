@@ -27,7 +27,8 @@ contract Staqe is IStaqe {
     mapping(address => mapping(uint256 => Stake[])) private _stakes;
 
     /// @dev Indicates claimed rewards by a staker in a pool, keyed by pool and reward indices, to avoid double claims.
-    mapping(address => mapping(uint256 => mapping(uint256 => uint256))) private _claimedAmount;
+    mapping(address => mapping(uint256 => mapping(uint256 => uint256)))
+        private _claimedAmount;
 
     constructor(
         IERC20 stakeERC20,
@@ -55,7 +56,7 @@ contract Staqe is IStaqe {
     }
 
     /**
-     * @notice Retrieves the amount of rewards that have already been claimed 
+     * @notice Retrieves the amount of rewards that have already been claimed
      *         by a staker for a specific reward in a pool.
      * @param staker The address of the staker.
      * @param poolId The ID of the pool.
@@ -187,7 +188,7 @@ contract Staqe is IStaqe {
             totalStakedERC721: 0,
             launchBlock: block.number
         });
-        
+
         _setTokenURI(poolId, tokenURI);
         _safeMint(_msgSender(), poolId);
 
@@ -243,7 +244,8 @@ contract Staqe is IStaqe {
 
         if (
             _rewards[poolId].length > 0 &&
-            _rewards[poolId][_rewards[poolId].length - 1].rewardBlock >= block.number
+            _rewards[poolId][_rewards[poolId].length - 1].rewardBlock >=
+            block.number
         ) {
             revert StakeOnNextBlockAfterReward();
         }
@@ -415,19 +417,32 @@ contract Staqe is IStaqe {
             IERC20 rewardToken = _pools[poolIds[poolIndex]].rewardToken;
 
             if (address(rewardToken) == address(0)) {
-                for (uint256 rewardIndex = 0; rewardIndex < rewardIds[poolIndex].length; rewardIndex++) {
+                for (
+                    uint256 rewardIndex = 0;
+                    rewardIndex < rewardIds[poolIndex].length;
+                    rewardIndex++
+                ) {
                     uint256 amount = amounts[poolIndex][rewardIndex];
 
                     if (amount <= 0) revert RewardIsEmpty();
 
                     // slither-disable-next-line calls-loop
-                    if (!tokens[poolIndex][rewardIndex].transfer(recipient, amount)) {
+                    if (
+                        !tokens[poolIndex][rewardIndex].transfer(
+                            recipient,
+                            amount
+                        )
+                    ) {
                         revert RewardTransferFailed();
                     }
                 }
             } else {
                 uint256 totalAmount = 0;
-                for (uint256 rewardIndex = 0; rewardIndex < rewardIds[poolIndex].length; rewardIndex++) {
+                for (
+                    uint256 rewardIndex = 0;
+                    rewardIndex < rewardIds[poolIndex].length;
+                    rewardIndex++
+                ) {
                     totalAmount += amounts[poolIndex][rewardIndex];
                 }
 
@@ -475,7 +490,10 @@ contract Staqe is IStaqe {
             revert StakerDoesNotHaveStakesInPool();
         }
 
-        (amountERC20, countERC721, idsERC721) = _calculateUnstake(poolId, stakeIds);
+        (amountERC20, countERC721, idsERC721) = _calculateUnstake(
+            poolId,
+            stakeIds
+        );
 
         if (amountERC20 <= 0 && countERC721 <= 0) {
             revert StakerDoesNotHaveStakesInPool();
@@ -498,12 +516,18 @@ contract Staqe is IStaqe {
     {
         idsERC721 = new uint256[](stakeIds.length);
 
-        for (uint256 stakeIndex = 0; stakeIndex < stakeIds.length; stakeIndex++) {
+        for (
+            uint256 stakeIndex = 0;
+            stakeIndex < stakeIds.length;
+            stakeIndex++
+        ) {
             if (stakeIds[stakeIndex] >= _stakes[_msgSender()][poolId].length) {
                 revert InvalidStakeId();
             }
 
-            Stake storage s = _stakes[_msgSender()][poolId][stakeIds[stakeIndex]];
+            Stake storage s = _stakes[_msgSender()][poolId][
+                stakeIds[stakeIndex]
+            ];
 
             if (s.unstakeBlock > 0 || s.stakeBlock >= block.number) {
                 revert StakeAlreadyUnstaked();
@@ -522,7 +546,11 @@ contract Staqe is IStaqe {
     function _calculateRewards(
         uint256[] memory poolIds,
         uint256[][] memory rewardIds
-    ) internal view returns (IERC20[][] memory tokens, uint256[][] memory amounts) {
+    )
+        internal
+        view
+        returns (IERC20[][] memory tokens, uint256[][] memory amounts)
+    {
         tokens = new IERC20[][](poolIds.length);
         amounts = new uint256[][](poolIds.length);
 
@@ -530,8 +558,15 @@ contract Staqe is IStaqe {
             tokens[poolIndex] = new IERC20[](rewardIds[poolIndex].length);
             amounts[poolIndex] = new uint256[](rewardIds[poolIndex].length);
 
-            for (uint256 rewardIndex = 0; rewardIndex < rewardIds[poolIndex].length; rewardIndex++) {
-                (tokens[poolIndex][rewardIndex], amounts[poolIndex][rewardIndex]) = _calculateReward(
+            for (
+                uint256 rewardIndex = 0;
+                rewardIndex < rewardIds[poolIndex].length;
+                rewardIndex++
+            ) {
+                (
+                    tokens[poolIndex][rewardIndex],
+                    amounts[poolIndex][rewardIndex]
+                ) = _calculateReward(
                     _msgSender(),
                     poolIds[poolIndex],
                     rewardIds[poolIndex][rewardIndex]
@@ -597,7 +632,11 @@ contract Staqe is IStaqe {
         uint256[][] memory amounts
     ) internal {
         for (uint256 poolIndex = 0; poolIndex < poolIds.length; poolIndex++) {
-            for (uint256 rewardIndex = 0; rewardIndex < rewardIds[poolIndex].length; rewardIndex++) {
+            for (
+                uint256 rewardIndex = 0;
+                rewardIndex < rewardIds[poolIndex].length;
+                rewardIndex++
+            ) {
                 _claimedAmount[_msgSender()][poolIds[poolIndex]][
                     rewardIds[poolIndex][rewardIndex]
                 ] = amounts[poolIndex][rewardIndex];
@@ -626,7 +665,9 @@ contract Staqe is IStaqe {
     }
 
     function _isERC721(address contractAddress) internal view returns (bool) {
-        try IERC165(contractAddress).supportsInterface(0x80ac58cd) returns (bool isERC721) {
+        try IERC165(contractAddress).supportsInterface(0x80ac58cd) returns (
+            bool isERC721
+        ) {
             return isERC721;
         } catch {
             return false;

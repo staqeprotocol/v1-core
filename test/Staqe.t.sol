@@ -64,18 +64,18 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
             ERC721Mock(address(rewardB)).mint(addresses[i], 10000 ether);
 
             vm.startPrank(addresses[i]);
-                nftA.setApprovalForAll(address(staqe), true);
-                nftB.setApprovalForAll(address(staqe), true);
+            nftA.setApprovalForAll(address(staqe), true);
+            nftB.setApprovalForAll(address(staqe), true);
 
-                stakeA.approve(address(staqe), type(uint256).max);
-                stakeB.approve(address(staqe), type(uint256).max);
+            stakeA.approve(address(staqe), type(uint256).max);
+            stakeB.approve(address(staqe), type(uint256).max);
 
-                rewardA.approve(address(staqe), type(uint256).max);
-                rewardB.approve(address(staqe), type(uint256).max);
+            rewardA.approve(address(staqe), type(uint256).max);
+            rewardB.approve(address(staqe), type(uint256).max);
 
-                ERC721Mock(address(genesis)).mint(addresses[i], i + 1);
-                genesis.setApprovalForAll(address(staqe), true);
-                staqe.stake(0, 0, i + 1);
+            ERC721Mock(address(genesis)).mint(addresses[i], i + 1);
+            genesis.setApprovalForAll(address(staqe), true);
+            staqe.stake(0, 0, i + 1);
             vm.stopPrank();
         }
     }
@@ -88,19 +88,25 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         assertEq(bytes(staqe.contractURI()).length, bytes("URI").length);
 
         vm.startPrank(user1);
-            vm.expectRevert(InvalidERC721Token.selector);
-            staqe.launchPool(stakeA, IERC721(address(stakeB)), erc20, 100 ether, "Test");
+        vm.expectRevert(InvalidERC721Token.selector);
+        staqe.launchPool(
+            stakeA,
+            IERC721(address(stakeB)),
+            erc20,
+            100 ether,
+            "Test"
+        );
 
-            vm.expectRevert(InvalidStakeToken.selector);
-            staqe.launchPool(erc20, erc721, erc20, 100 ether, "Test");
+        vm.expectRevert(InvalidStakeToken.selector);
+        staqe.launchPool(erc20, erc721, erc20, 100 ether, "Test");
 
-            vm.expectRevert(InvalidTokenURI.selector);
-            staqe.launchPool(stakeA, erc721, erc20, 100 ether, "");
+        vm.expectRevert(InvalidTokenURI.selector);
+        staqe.launchPool(stakeA, erc721, erc20, 100 ether, "");
 
-            vm.expectRevert(TotalMaxForOnlyOneTypeOfToken.selector);
-            staqe.launchPool(stakeA, nftA, erc20, 100 ether, "Test");
+        vm.expectRevert(TotalMaxForOnlyOneTypeOfToken.selector);
+        staqe.launchPool(stakeA, nftA, erc20, 100 ether, "Test");
 
-            staqe.launchPool(stakeA, erc721, erc20, 100 ether, "Test");
+        staqe.launchPool(stakeA, erc721, erc20, 100 ether, "Test");
         vm.stopPrank();
 
         assertEq(staqe.getTotalPools(), 1);
@@ -116,7 +122,7 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         staqe.editPool(1, 10 ether, "New TokenURI");
 
         vm.startPrank(user1);
-            staqe.editPool(1, 10 ether, "New TokenURI");
+        staqe.editPool(1, 10 ether, "New TokenURI");
         vm.stopPrank();
 
         assertEq(bytes(staqe.tokenURI(1)).length, bytes("New TokenURI").length);
@@ -124,48 +130,48 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         vm.roll(blockId++);
 
         vm.startPrank(user2);
-            staqe.stake(1, 100 ether, 0);
+        staqe.stake(1, 100 ether, 0);
 
-            vm.expectRevert(MoreThanTheTotalMaxTokens.selector);
-            staqe.stake(1, 1 ether, 0);
+        vm.expectRevert(MoreThanTheTotalMaxTokens.selector);
+        staqe.stake(1, 1 ether, 0);
         vm.stopPrank();
 
         vm.startPrank(user1);
-            staqe.editPool(1, 101 ether, "Increase the total max");
+        staqe.editPool(1, 101 ether, "Increase the total max");
         vm.stopPrank();
 
         vm.startPrank(user2);
-            staqe.stake(1, 1 ether, 0);
+        staqe.stake(1, 1 ether, 0);
         vm.stopPrank();
     }
 
     function test_Reward() public {
         vm.startPrank(user1);
-            staqe.launchPool(stakeA, erc721, erc20, 0, "Test");
+        staqe.launchPool(stakeA, erc721, erc20, 0, "Test");
 
-            vm.expectRevert(PoolDoesNotHaveStakes.selector);
-            staqe.addReward(1, rewardA, 10 ether, 0, false);
+        vm.expectRevert(PoolDoesNotHaveStakes.selector);
+        staqe.addReward(1, rewardA, 10 ether, 0, false);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user2);
-            staqe.stake(1, 100 ether, 0);
+        staqe.stake(1, 100 ether, 0);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user1);
-            vm.expectRevert(PoolDoesNotExist.selector);
-            staqe.addReward(2, rewardA, 10 ether, 0, false);
+        vm.expectRevert(PoolDoesNotExist.selector);
+        staqe.addReward(2, rewardA, 10 ether, 0, false);
 
-            vm.expectRevert(InvalidRewardToken.selector);
-            staqe.addReward(1, erc20, 10 ether, 0, false);
+        vm.expectRevert(InvalidRewardToken.selector);
+        staqe.addReward(1, erc20, 10 ether, 0, false);
 
-            vm.expectRevert(RewardIsEmpty.selector);
-            staqe.addReward(1, rewardA, 0, 0, false);
+        vm.expectRevert(RewardIsEmpty.selector);
+        staqe.addReward(1, rewardA, 0, 0, false);
 
-            staqe.addReward(1, rewardA, 10 ether, 0, false);
+        staqe.addReward(1, rewardA, 10 ether, 0, false);
         vm.stopPrank();
 
         assertEq(staqe.getClaimedAmount(user2, 1, 0), 0);
@@ -185,44 +191,44 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
     function test_Stake() public {
         vm.startPrank(user1);
-            staqe.launchPool(stakeA, erc721, erc20, 0, "Test");
+        staqe.launchPool(stakeA, erc721, erc20, 0, "Test");
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user2);
-            vm.expectRevert(PoolDoesNotExist.selector);
-            staqe.stake(2, 90 ether, 0);
+        vm.expectRevert(PoolDoesNotExist.selector);
+        staqe.stake(2, 90 ether, 0);
 
-            vm.expectRevert(InvalidAmountOrId.selector);
-            staqe.stake(1, 0, 0);
+        vm.expectRevert(InvalidAmountOrId.selector);
+        staqe.stake(1, 0, 0);
 
-            staqe.stake(1, 90 ether, 0);
+        staqe.stake(1, 90 ether, 0);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user3);
-            staqe.stake(1, 5 ether, 0);
+        staqe.stake(1, 5 ether, 0);
         vm.stopPrank();
 
         vm.startPrank(user1);
-            staqe.addReward(1, rewardA, 190 ether, 0, false);
+        staqe.addReward(1, rewardA, 190 ether, 0, false);
         vm.stopPrank();
 
         vm.startPrank(user3);
-            vm.expectRevert(StakeOnNextBlockAfterReward.selector);
-            staqe.stake(1, 5 ether, 0);
+        vm.expectRevert(StakeOnNextBlockAfterReward.selector);
+        staqe.stake(1, 5 ether, 0);
 
-            vm.roll(blockId++);
+        vm.roll(blockId++);
 
-            staqe.stake(1, 5 ether, 0);
+        staqe.stake(1, 5 ether, 0);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user1);
-            staqe.addReward(1, rewardA, 100 ether, 0, false);
+        staqe.addReward(1, rewardA, 100 ether, 0, false);
         vm.stopPrank();
 
         vm.roll(blockId++);
@@ -239,46 +245,46 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
     function test_Claim() public {
         vm.startPrank(user1);
-            staqe.launchPool(stakeA, erc721, erc20, 0, "Test 1");
+        staqe.launchPool(stakeA, erc721, erc20, 0, "Test 1");
         vm.stopPrank();
 
         vm.startPrank(user2);
-            staqe.launchPool(erc20, nftA, rewardB, 0, "Test 2");
+        staqe.launchPool(erc20, nftA, rewardB, 0, "Test 2");
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user3);
-            staqe.stake(1, 90 ether, 0);
-            staqe.stake(2, 0, 33);
+        staqe.stake(1, 90 ether, 0);
+        staqe.stake(2, 0, 33);
 
-            vm.expectRevert();
-            staqe.stake(1, 90 ether, 33);
+        vm.expectRevert();
+        staqe.stake(1, 90 ether, 33);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user4);
-            vm.expectRevert();
-            staqe.stake(2, 5 ether, 44);
+        vm.expectRevert();
+        staqe.stake(2, 5 ether, 44);
 
-            staqe.stake(1, 5 ether, 0);
-            staqe.stake(2, 0, 44);
+        staqe.stake(1, 5 ether, 0);
+        staqe.stake(2, 0, 44);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user1);
-            staqe.addReward(1, rewardA, 190 ether, 0, false);
+        staqe.addReward(1, rewardA, 190 ether, 0, false);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user2);
-            vm.expectRevert(OnlyOwnerHasAccessToAddRewards.selector);
-            staqe.addReward(1, rewardB, 90 ether, 0, true);
+        vm.expectRevert(OnlyOwnerHasAccessToAddRewards.selector);
+        staqe.addReward(1, rewardB, 90 ether, 0, true);
 
-            staqe.addReward(2, rewardB, 90 ether, 0, true);
+        staqe.addReward(2, rewardB, 90 ether, 0, true);
         vm.stopPrank();
 
         vm.roll(blockId++);
@@ -289,13 +295,13 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         rewardIds[0][0] = 0;
 
         vm.startPrank(user3);
-            poolIds[0] = 1;
-            staqe.claimRewards(poolIds, rewardIds, user5);
+        poolIds[0] = 1;
+        staqe.claimRewards(poolIds, rewardIds, user5);
         vm.stopPrank();
 
         vm.startPrank(user4);
-            poolIds[0] = 2;
-            staqe.claimRewards(poolIds, rewardIds, user6);
+        poolIds[0] = 2;
+        staqe.claimRewards(poolIds, rewardIds, user6);
         vm.stopPrank();
 
         uint256 balanceA = rewardA.balanceOf(user5);
@@ -310,25 +316,25 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
     function test_Unstake() public {
         vm.startPrank(user1);
-            staqe.launchPool(stakeA, erc721, erc20, 0, "Test");
+        staqe.launchPool(stakeA, erc721, erc20, 0, "Test");
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user3);
-            staqe.stake(1, 5 ether, 0);
+        staqe.stake(1, 5 ether, 0);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user2);
-            staqe.stake(1, 90 ether, 0);
+        staqe.stake(1, 90 ether, 0);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user3);
-            staqe.stake(1, 5 ether, 0);
+        staqe.stake(1, 5 ether, 0);
         vm.stopPrank();
 
         vm.roll(blockId++);
@@ -343,7 +349,7 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         uint256 initialBalance = stakeA.balanceOf(user3);
 
         vm.startPrank(user3);
-            staqe.unstake(1, stakeIds);
+        staqe.unstake(1, stakeIds);
         vm.stopPrank();
 
         assertEq(stakeA.balanceOf(user3), initialBalance + 10 ether);
@@ -351,7 +357,7 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
     function test_StakeWithPermit() public {
         vm.startPrank(user1);
-            staqe.launchPool(stakeA, erc721, erc20, 0, "Test");
+        staqe.launchPool(stakeA, erc721, erc20, 0, "Test");
         vm.stopPrank();
 
         vm.roll(blockId++);
@@ -359,7 +365,15 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         uint256 initialBalance = stakeA.balanceOf(user2);
 
         vm.startPrank(user2);
-            staqe.stakeWithPermit(1, 100 ether, block.timestamp + 1 days, 0, 0, 0, false);
+        staqe.stakeWithPermit(
+            1,
+            100 ether,
+            block.timestamp + 1 days,
+            0,
+            0,
+            0,
+            false
+        );
         vm.stopPrank();
 
         assertEq(stakeA.balanceOf(user2), initialBalance - 100 ether);
@@ -371,27 +385,30 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
     function test_AddRewardWithPermit() public {
         vm.startPrank(user1);
-            staqe.launchPool(stakeA, erc721, erc20, 0, "Test");
+        staqe.launchPool(stakeA, erc721, erc20, 0, "Test");
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user2);
-            staqe.stake(1, 100 ether, 0);
+        staqe.stake(1, 100 ether, 0);
         vm.stopPrank();
 
         uint256 initialBalance = rewardA.balanceOf(user1);
 
         vm.startPrank(user1);
-            staqe.addRewardWithPermit(
-                1,
-                rewardA,
-                50 ether,
-                10,
-                false,
-                block.timestamp + 1 days,
-                0, 0, 0, false
-            );
+        staqe.addRewardWithPermit(
+            1,
+            rewardA,
+            50 ether,
+            10,
+            false,
+            block.timestamp + 1 days,
+            0,
+            0,
+            0,
+            false
+        );
         vm.stopPrank();
 
         assertEq(rewardA.balanceOf(user1), initialBalance - 50 ether);
@@ -403,30 +420,30 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
     function test_StaqeViews() public {
         vm.startPrank(user1);
-            staqe.launchPool(stakeA, erc721, erc20, 0, "Test 1");
+        staqe.launchPool(stakeA, erc721, erc20, 0, "Test 1");
         vm.stopPrank();
 
         vm.startPrank(user2);
-            staqe.launchPool(erc20, nftA, rewardB, 2, "Test 2");
+        staqe.launchPool(erc20, nftA, rewardB, 2, "Test 2");
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user3);
-            staqe.stake(1, 90 ether, 0);
-            staqe.stake(2, 0, 33);
+        staqe.stake(1, 90 ether, 0);
+        staqe.stake(2, 0, 33);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user1);
-            staqe.addReward(1, rewardA, 190 ether, 0, false);
+        staqe.addReward(1, rewardA, 190 ether, 0, false);
         vm.stopPrank();
 
         vm.roll(blockId++);
 
         vm.startPrank(user2);
-            staqe.addReward(2, rewardB, 90 ether, 0, true);
+        staqe.addReward(2, rewardB, 90 ether, 0, true);
         vm.stopPrank();
 
         vm.roll(blockId++);
@@ -437,8 +454,8 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
         rewardIds[0][0] = 0;
 
         vm.startPrank(user3);
-            poolIds[0] = 1;
-            staqe.claimRewards(poolIds, rewardIds, user4);
+        poolIds[0] = 1;
+        staqe.claimRewards(poolIds, rewardIds, user4);
         vm.stopPrank();
 
         Staqe.PoolDetails memory pool1 = staqe.getPool(user3, 1);
@@ -449,7 +466,11 @@ contract StaqeTest is Test, IStaqeStructs, IStaqeEvents, IStaqeErrors {
 
         (IERC20 token, uint256 amount) = staqe.calculateReward(user3, 2, 0);
 
-        Staqe.Token memory tokenInfo = staqe.tokenInfo(user4, rewardA, IERC721(address(0)));
+        Staqe.Token memory tokenInfo = staqe.tokenInfo(
+            user4,
+            rewardA,
+            IERC721(address(0))
+        );
 
         assertEq(bytes(pool1.tokenURI).length, bytes("Test 1").length);
         assertEq(pool1.totalStakedERC20, 90 ether);

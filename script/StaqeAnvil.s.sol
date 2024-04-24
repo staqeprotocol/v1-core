@@ -26,7 +26,6 @@ contract StaqeAnvilScript is Script {
         address anvilUser1 = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
         address anvilUser2 = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
 
-        uint256 privateKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
         string
             memory poolIpfs = "ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/";
         string
@@ -40,7 +39,9 @@ contract StaqeAnvilScript is Script {
         uint256[] memory stakeIds = new uint256[](1);
         stakeIds[0] = 1;
 
-        vm.startBroadcast(privateKey);
+        vm.startBroadcast(
+            0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+        ); // anvilUser1
 
         console.log("Pool Metadata:", poolIpfs);
         console.log("IPFS NFTs:", nftIpfs);

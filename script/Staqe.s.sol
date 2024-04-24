@@ -10,7 +10,7 @@ import {ERC721Mock, IERC165} from "../test/mock/ERC721Mock.sol";
 contract StaqeScript is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        
+
         vm.startBroadcast(deployerPrivateKey);
 
         ERC721Mock genesis = new ERC721Mock("Genesis", "GNS");

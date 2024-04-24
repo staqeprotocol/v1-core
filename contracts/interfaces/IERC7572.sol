@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import {ERC721, IERC165} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-/** 
+/**
  * @title IERC7572 Interface
  * @dev Interface for the EIP-7572 standard for defining contract-level metadata.
  *      https://eips.ethereum.org/EIPS/eip-7572

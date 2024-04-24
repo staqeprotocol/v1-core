@@ -11,10 +11,7 @@ pragma abicoder v2;
  *                   |_|
  */
 interface IStaqeEvents {
-    event Launched(
-        address indexed launcher,
-        uint256 indexed poolId
-    );
+    event Launched(address indexed launcher, uint256 indexed poolId);
 
     event Staked(
         address indexed staker,
@@ -28,13 +25,7 @@ interface IStaqeEvents {
         uint256 indexed rewardId
     );
 
-    event Unstaked(
-        address indexed staker,
-        uint256 indexed poolId
-    );
+    event Unstaked(address indexed staker, uint256 indexed poolId);
 
-    event Claimed(
-        address indexed staker,
-        uint256 indexed poolId
-    );
+    event Claimed(address indexed staker, uint256 indexed poolId);
 }
