@@ -32,8 +32,6 @@ contract StaqeAnvilScript is Script {
         string
             memory nftIpfs = "ipfs://bafybeieyb62vnkv46zr5mw3nfqlhcxt7v2frd2tu6k3cwgkqfgwmnyflme/";
 
-        uint256 maxSupply = 18_000_000 * 10 ** 18;
-
         uint256[] memory poolIds = new uint256[](1);
         poolIds[0] = 3;
         uint256[][] memory rewardIds = new uint256[][](1);
@@ -54,9 +52,10 @@ contract StaqeAnvilScript is Script {
         ERC20Toqen stake = toqen.createERC20(
             "Stake Token",
             "STK",
-            maxSupply,
+            18_000_000 * 10 ** 18,
             0
         );
+        stake.mint(anvilUser1, 1_000_000 * 10 ** 18);
         stake.mint(anvilUser2, 1_000_000 * 10 ** 18);
         console.log("Stake ERC20:", address(stake));
 
@@ -74,9 +73,10 @@ contract StaqeAnvilScript is Script {
         ERC20Toqen reward = toqen.createERC20(
             "Reward Token",
             "RWD",
-            maxSupply,
+            18_000_000 * 10 ** 18,
             0
         );
+        reward.mint(anvilUser1, 1_000_000 * 10 ** 18);
         reward.mint(anvilUser2, 1_000_000 * 10 ** 18);
         console.log("Reward ERC20:", address(reward));
 
@@ -98,7 +98,13 @@ contract StaqeAnvilScript is Script {
         );
         console.log("Staqe Protocol:", address(staqe));
 
-        ERC20Toqen other = toqen.createERC20("Approve", "APRV", maxSupply, 0);
+        ERC20Toqen other = toqen.createERC20(
+            "Approve",
+            "APRV",
+            18_000_000 * 10 ** 18,
+            0
+        );
+        other.mint(anvilUser1, 1_000_000 * 10 ** 18);
         other.mint(anvilUser2, 1_000_000 * 10 ** 18);
         console.log("Other ERC20:", address(other));
 
