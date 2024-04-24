@@ -11,6 +11,7 @@ out/*
 !out/IStaqeStructs.sol
 !out/ERC20.sol
 !out/ERC721.sol
+!out/Toqen.sol
 
 # Ignores development broadcast logs
 /broadcast
