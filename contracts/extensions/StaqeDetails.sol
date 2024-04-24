@@ -5,12 +5,12 @@ pragma abicoder v2;
 import {Staqe, ERC20, ERC721, IERC20, IERC721} from "@staqeprotocol/v1-core/contracts/Staqe.sol";
 
 /**
- *       _                         _      _        _ _     
- *   ___| |_ __ _  __ _  ___    __| | ___| |_ __ _(_) |___ 
+ *       _                         _      _        _ _
+ *   ___| |_ __ _  __ _  ___    __| | ___| |_ __ _(_) |___
  *  / __| __/ _` |/ _` |/ _ \  / _` |/ _ \ __/ _` | | / __|
  *  \__ \ || (_| | (_| |  __/ | (_| |  __/ || (_| | | \__ \
  *  |___/\__\__,_|\__, |\___|  \__,_|\___|\__\__,_|_|_|___/
- *                   |_|                                   
+ *                   |_|
  */
 abstract contract StaqeDetails is Staqe {
     struct Token {
@@ -48,14 +48,14 @@ abstract contract StaqeDetails is Staqe {
     }
 
     /**
-     * @notice Retrieves information about a specific token for a user, including name, symbol, 
+     * @notice Retrieves information about a specific token for a user, including name, symbol,
      *         decimals, balance, and approval status.
      * @param user The address of the user to query the token information for.
-     * @param ierc20 The address of the ERC20 token contract. If this is the token type being queried, 
+     * @param ierc20 The address of the ERC20 token contract. If this is the token type being queried,
      *               `ierc721` should be zero.
-     * @param ierc721 The address of the ERC721 token contract. If this is the token type being queried, 
+     * @param ierc721 The address of the ERC721 token contract. If this is the token type being queried,
      *                `ierc20` should be zero.
-     * @return token A `Token` struct containing details about the token such as its address, name, 
+     * @return token A `Token` struct containing details about the token such as its address, name,
      *               symbol, decimals, user's balance, and approval status.
      */
     function tokenInfo(
@@ -71,7 +71,8 @@ abstract contract StaqeDetails is Staqe {
                 symbol: erc20.symbol(),
                 decimals: erc20.decimals(),
                 balance: erc20.balanceOf(user),
-                isApproved: erc20.allowance(user, address(this)) == type(uint256).max
+                isApproved: erc20.allowance(user, address(this)) >=
+                    type(uint256).max
             });
         }
         if (address(ierc721) != address(0) && address(ierc20) == address(0)) {
@@ -81,8 +82,12 @@ abstract contract StaqeDetails is Staqe {
                 name: erc721.name(),
                 symbol: erc721.symbol(),
                 decimals: 0,
-                balance: address(user) == address(0) ? 0 : erc721.balanceOf(user),
-                isApproved: address(user) == address(0) ? false : erc721.isApprovedForAll(user, address(this))
+                balance: address(user) == address(0)
+                    ? 0
+                    : erc721.balanceOf(user),
+                isApproved: address(user) == address(0)
+                    ? false
+                    : erc721.isApprovedForAll(user, address(this))
             });
         }
     }
@@ -144,7 +149,10 @@ abstract contract StaqeDetails is Staqe {
         uint256 stakerRewardAmount = 0;
         bool isClaimed = false;
 
-        try this.calculateReward(staker, poolId, rewardId) returns (IERC20 _token, uint256 _amount) {
+        try this.calculateReward(staker, poolId, rewardId) returns (
+            IERC20 _token,
+            uint256 _amount
+        ) {
             r.rewardToken = _token;
             stakerRewardAmount = _amount;
         } catch {
