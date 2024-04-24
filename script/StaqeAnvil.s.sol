@@ -26,11 +26,6 @@ contract StaqeAnvilScript is Script {
         address anvilUser1 = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
         address anvilUser2 = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
 
-        string
-            memory poolIpfs = "ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/";
-        string
-            memory nftIpfs = "ipfs://bafybeieyb62vnkv46zr5mw3nfqlhcxt7v2frd2tu6k3cwgkqfgwmnyflme/";
-
         uint256[] memory poolIds = new uint256[](1);
         poolIds[0] = 3;
         uint256[][] memory rewardIds = new uint256[][](1);
@@ -43,8 +38,14 @@ contract StaqeAnvilScript is Script {
             0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
         ); // anvilUser1
 
-        console.log("Pool Metadata:", poolIpfs);
-        console.log("IPFS NFTs:", nftIpfs);
+        console.log(
+            "Pool Metadata:",
+            "ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/"
+        );
+        console.log(
+            "IPFS NFTs:",
+            "ipfs://bafybeieyb62vnkv46zr5mw3nfqlhcxt7v2frd2tu6k3cwgkqfgwmnyflme/"
+        );
         console.log("");
 
         Toqen toqen = new Toqen();
@@ -65,7 +66,7 @@ contract StaqeAnvilScript is Script {
             "NFT",
             200,
             0,
-            nftIpfs
+            "ipfs://bafybeieyb62vnkv46zr5mw3nfqlhcxt7v2frd2tu6k3cwgkqfgwmnyflme/"
         );
         nft.mint(anvilUser1, 3);
         nft.mint(anvilUser2, 1);
@@ -86,7 +87,7 @@ contract StaqeAnvilScript is Script {
             "GNS",
             200,
             0,
-            nftIpfs
+            "ipfs://bafybeieyb62vnkv46zr5mw3nfqlhcxt7v2frd2tu6k3cwgkqfgwmnyflme/"
         );
         genesis.mint(anvilUser1, 1);
         genesis.mint(anvilUser2, 1);
@@ -121,35 +122,35 @@ contract StaqeAnvilScript is Script {
             IERC721(address(0)),
             IERC20(address(reward)),
             100 ether,
-            poolIpfs
+            "ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/"
         );
         staqe.launchPool(
             IERC20(address(0)),
             IERC721(address(nft)),
             IERC20(address(stake)),
             2,
-            poolIpfs
+            "ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/"
         );
         staqe.launchPool(
             IERC20(address(stake)),
             IERC721(address(nft)),
             IERC20(address(0)),
             0,
-            poolIpfs
+            "ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/"
         );
         staqe.launchPool(
             IERC20(address(stake)),
             IERC721(address(0)),
             IERC20(address(0)),
             0,
-            poolIpfs
+            "ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/"
         );
         staqe.launchPool(
             IERC20(address(0)),
             IERC721(address(nft)),
             IERC20(address(0)),
             0,
-            poolIpfs
+            "ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/"
         );
 
         staqe.stake(1, 10 ether, 0);

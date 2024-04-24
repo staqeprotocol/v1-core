@@ -426,8 +426,8 @@ contract Staqe is IStaqe {
 
                     if (amount <= 0) revert RewardIsEmpty();
 
-                    // slither-disable-next-line calls-loop
                     if (
+                        // slither-disable-next-line calls-loop
                         !tokens[poolIndex][rewardIndex].transfer(
                             recipient,
                             amount
