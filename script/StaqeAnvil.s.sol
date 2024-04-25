@@ -101,8 +101,8 @@ contract StaqeAnvilScript is Script {
         console.log("Staqe Protocol:", address(staqe));
 
         ERC20Toqen other = toqen.createERC20(
-            "Approve",
-            "APRV",
+            "Other Token",
+            "OTR",
             18_000_000 * 10 ** 18,
             0
         );
@@ -127,7 +127,7 @@ contract StaqeAnvilScript is Script {
         staqe.launchPool(
             IERC20(address(0)),
             IERC721(address(nft)),
-            IERC20(address(stake)),
+            IERC20(address(reward)),
             2,
             "ipfs://bafybeie6uhfmylorsaumqwuo6dyc4rtxv2k5ofm7uihb2qbwtg2v4gibja/"
         );
@@ -159,11 +159,11 @@ contract StaqeAnvilScript is Script {
         staqe.stake(3, 20 ether, 3);
 
         staqe.addReward(1, IERC20(address(reward)), 100 ether, 0, false);
-        staqe.addReward(2, IERC20(address(stake)), 50 ether, 0, true);
-        staqe.addReward(2, IERC20(address(stake)), 10 ether, 0, true);
-        staqe.addReward(3, IERC20(address(stake)), 11 ether, 0, true);
-        staqe.addReward(3, IERC20(address(stake)), 33 ether, 0, false);
-        staqe.addReward(3, IERC20(address(stake)), 22 ether, 0, false);
+        staqe.addReward(2, IERC20(address(reward)), 50 ether, 0, true);
+        staqe.addReward(2, IERC20(address(reward)), 10 ether, 0, true);
+        staqe.addReward(3, IERC20(address(reward)), 11 ether, 0, true);
+        staqe.addReward(3, IERC20(address(reward)), 33 ether, 0, false);
+        staqe.addReward(3, IERC20(address(reward)), 22 ether, 0, false);
 
         vm.stopBroadcast();
     }
