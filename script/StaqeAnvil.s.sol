@@ -11,7 +11,7 @@ import {Toqen, ERC20Toqen, ERC721Toqen} from "@toqen/contracts/Toqen.sol";
  *      sleep 10 && forge script script/StaqeAnvil.s.sol --fork-url http://localhost:8545 --broadcast
  *
  *      IPFS NFTs:     ipfs://bafybeieyb62vnkv46zr5mw3nfqlhcxt7v2frd2tu6k3cwgkqfgwmnyflme/
- *      Pool Metadata: ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/
+ *      Pool Metadata: ipfs://bafybeie6uhfmylorsaumqwuo6dyc4rtxv2k5ofm7uihb2qbwtg2v4gibja/
  *
  *      Toqen:          0x5FbDB2315678afecb367f032d93F642f64180aa3
  *      Stake ERC20:    0xa16E02E87b7454126E5E10d957A927A7F5B5d2be
@@ -40,7 +40,7 @@ contract StaqeAnvilScript is Script {
 
         console.log(
             "Pool Metadata:",
-            "ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/"
+            "ipfs://bafybeie6uhfmylorsaumqwuo6dyc4rtxv2k5ofm7uihb2qbwtg2v4gibja/"
         );
         console.log(
             "IPFS NFTs:",
@@ -122,35 +122,35 @@ contract StaqeAnvilScript is Script {
             IERC721(address(0)),
             IERC20(address(reward)),
             100 ether,
-            "ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/"
+            "ipfs://bafybeie6uhfmylorsaumqwuo6dyc4rtxv2k5ofm7uihb2qbwtg2v4gibja/"
         );
         staqe.launchPool(
             IERC20(address(0)),
             IERC721(address(nft)),
             IERC20(address(stake)),
             2,
-            "ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/"
+            "ipfs://bafybeie6uhfmylorsaumqwuo6dyc4rtxv2k5ofm7uihb2qbwtg2v4gibja/"
         );
         staqe.launchPool(
             IERC20(address(stake)),
             IERC721(address(nft)),
             IERC20(address(0)),
             0,
-            "ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/"
+            "ipfs://bafybeie6uhfmylorsaumqwuo6dyc4rtxv2k5ofm7uihb2qbwtg2v4gibja/"
         );
         staqe.launchPool(
             IERC20(address(stake)),
             IERC721(address(0)),
             IERC20(address(0)),
             0,
-            "ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/"
+            "ipfs://bafybeie6uhfmylorsaumqwuo6dyc4rtxv2k5ofm7uihb2qbwtg2v4gibja/"
         );
         staqe.launchPool(
             IERC20(address(0)),
             IERC721(address(nft)),
             IERC20(address(0)),
             0,
-            "ipfs://bafybeic6soo6e6ztcqpx7cm6d6h23sjf2ib2hammjfc4fncdfugryfr534/"
+            "ipfs://bafybeie6uhfmylorsaumqwuo6dyc4rtxv2k5ofm7uihb2qbwtg2v4gibja/"
         );
 
         staqe.stake(1, 10 ether, 0);
