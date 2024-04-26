@@ -19,7 +19,6 @@ abstract contract StaqeDetails is Staqe {
         string symbol;
         uint256 decimals;
         uint256 balance;
-        bool isApproved;
     }
 
     struct PoolDetails {
@@ -70,9 +69,7 @@ abstract contract StaqeDetails is Staqe {
                 name: erc20.name(),
                 symbol: erc20.symbol(),
                 decimals: erc20.decimals(),
-                balance: erc20.balanceOf(user),
-                isApproved: erc20.allowance(user, address(this)) >=
-                    type(uint256).max
+                balance: address(user) == address(0) ? 0 : erc20.balanceOf(user)
             });
         }
         if (address(ierc721) != address(0) && address(ierc20) == address(0)) {
@@ -84,10 +81,7 @@ abstract contract StaqeDetails is Staqe {
                 decimals: 0,
                 balance: address(user) == address(0)
                     ? 0
-                    : erc721.balanceOf(user),
-                isApproved: address(user) == address(0)
-                    ? false
-                    : erc721.isApprovedForAll(user, address(this))
+                    : erc721.balanceOf(user)
             });
         }
     }
