@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Script, console} from "forge-std/Script.sol";
 import {StaqeProtocol as Staqe, IERC20, IERC721} from "@staqeprotocol/v1-core/contracts/StaqeProtocol.sol";
-import {Toqen, ERC20Toqen, ERC721Toqen} from "@toqen/contracts/Toqen.sol";
+import {Toqen, ERC20Toqen, ERC721Toqen} from "@toqen/contracts/src/Toqen.sol";
 
 /**
  * @dev Genesis Pool block number > 0

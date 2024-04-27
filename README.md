@@ -39,3 +39,27 @@ Tokens can be unstaked at any time using the `unstake` function, which requires 
 ### Claiming Rewards
 
 Users claim their rewards using the `claimRewards` function, specifying the pools and reward IDs they wish to claim.
+
+## Dev
+
+```
+/**
+ * @dev
+ *      anvil --block-time 10 --chain-id 1337
+ *      sleep 10 && forge script script/StaqeAnvil.s.sol --fork-url http://localhost:8545 --broadcast
+ *
+ *      Doc: https://github.com/mds1/multicall?tab=readme-ov-file#new-deployments
+ *      cast publish "$(cat script/TX.txt)" --rpc-url http://localhost:8545
+ *
+ *      IPFS NFTs:     ipfs://bafybeieyb62vnkv46zr5mw3nfqlhcxt7v2frd2tu6k3cwgkqfgwmnyflme/
+ *      Pool Metadata: ipfs://bafybeie6uhfmylorsaumqwuo6dyc4rtxv2k5ofm7uihb2qbwtg2v4gibja/
+ *
+ *      Toqen:          0x5FbDB2315678afecb367f032d93F642f64180aa3
+ *      Stake ERC20:    0xa16E02E87b7454126E5E10d957A927A7F5B5d2be
+ *      Stake ERC721:   0xB7A5bd0345EF1Cc5E66bf61BdeC17D2461fBd968
+ *      Reward ERC20:   0xeEBe00Ac0756308ac4AaBfD76c05c4F3088B8883
+ *      Genesis NFT:    0x10C6E9530F1C1AF873a391030a1D9E8ed0630D26
+ *      Staqe Protocol: 0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82
+ *      Other ERC20:    0x603E1BD79259EbcbAaeD0c83eeC09cA0B89a5bcC
+ */
+```
