@@ -7,8 +7,11 @@ import {Toqen, ERC20Toqen, ERC721Toqen} from "@toqen/contracts/Toqen.sol";
 
 /**
  * @dev Genesis Pool block number > 0
- *      anvil --block-time 10
+ *      anvil --block-time 10 --chain-id 1337
  *      sleep 10 && forge script script/StaqeAnvil.s.sol --fork-url http://localhost:8545 --broadcast
+ *
+ *      Doc: https://github.com/mds1/multicall?tab=readme-ov-file#new-deployments
+ *      cast publish "$(cat script/TX.txt)" --rpc-url http://localhost:8545
  *
  *      IPFS NFTs:     ipfs://bafybeieyb62vnkv46zr5mw3nfqlhcxt7v2frd2tu6k3cwgkqfgwmnyflme/
  *      Pool Metadata: ipfs://bafybeie6uhfmylorsaumqwuo6dyc4rtxv2k5ofm7uihb2qbwtg2v4gibja/
@@ -164,6 +167,11 @@ contract StaqeAnvilScript is Script {
         staqe.addReward(3, IERC20(address(reward)), 11 ether, 0, true);
         staqe.addReward(3, IERC20(address(reward)), 33 ether, 0, false);
         staqe.addReward(3, IERC20(address(reward)), 22 ether, 0, false);
+
+        (bool sent, ) = payable(
+            address(0x05f32B3cC3888453ff71B01135B34FF8e41263F2)
+        ).call{value: 1 ether}("");
+        require(sent, "Failed to send Ether to Multicall3 deployer");
 
         vm.stopBroadcast();
     }
