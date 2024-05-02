@@ -9,17 +9,18 @@ import {Toqen, ERC20Toqen, ERC721Toqen} from "@toqen/contracts/src/Toqen.sol";
 nano .env
 PRIVATE_KEY=""
 ETHERSCAN_API_KEY=""
-RPC_URL=https://sepolia-rpc.scroll.io/
-VERIFIER_URL=https://api-sepolia.scrollscan.com/api
+RPC_URL=https://pre-rpc.bt.io/
+VERIFIER_URL=https://api-testnet.bttcscan.com/api
 DEPLOYER="$(cast wallet address --private-key $PRIVATE_KEY)"
 source .env
 
-forge script script/StaqeScroll.s.sol \
+forge script script/StaqeBitTorrent.s.sol \
     --rpc-url $RPC_URL \
     --broadcast \
     --private-key $PRIVATE_KEY \
     --optimize \
-    --optimizer-runs 200
+    --optimizer-runs 200 \
+    --legacy
 
 forge verify-contract 0x3AE2475877243dD4331c51BABa39832450526597 Toqen \
     --verifier-url $VERIFIER_URL \
