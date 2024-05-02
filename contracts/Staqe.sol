@@ -411,8 +411,6 @@ contract Staqe is IStaqe {
 
         (tokens, amounts) = _calculateRewards(poolIds, rewardIds);
 
-        _setClaimedAmounts(poolIds, rewardIds, amounts);
-
         for (uint256 poolIndex = 0; poolIndex < poolIds.length; poolIndex++) {
             IERC20 rewardToken = _pools[poolIds[poolIndex]].rewardToken;
 
@@ -546,11 +544,7 @@ contract Staqe is IStaqe {
     function _calculateRewards(
         uint256[] memory poolIds,
         uint256[][] memory rewardIds
-    )
-        internal
-        view
-        returns (IERC20[][] memory tokens, uint256[][] memory amounts)
-    {
+    ) internal returns (IERC20[][] memory tokens, uint256[][] memory amounts) {
         tokens = new IERC20[][](poolIds.length);
         amounts = new uint256[][](poolIds.length);
 
@@ -571,6 +565,10 @@ contract Staqe is IStaqe {
                     poolIds[poolIndex],
                     rewardIds[poolIndex][rewardIndex]
                 );
+
+                _claimedAmount[_msgSender()][poolIds[poolIndex]][
+                    rewardIds[poolIndex][rewardIndex]
+                ] = amounts[poolIndex][rewardIndex];
             }
         }
     }
@@ -624,24 +622,6 @@ contract Staqe is IStaqe {
         if (amount <= 0) revert RewardIsEmpty();
 
         token = reward.rewardToken;
-    }
-
-    function _setClaimedAmounts(
-        uint256[] memory poolIds,
-        uint256[][] memory rewardIds,
-        uint256[][] memory amounts
-    ) internal {
-        for (uint256 poolIndex = 0; poolIndex < poolIds.length; poolIndex++) {
-            for (
-                uint256 rewardIndex = 0;
-                rewardIndex < rewardIds[poolIndex].length;
-                rewardIndex++
-            ) {
-                _claimedAmount[_msgSender()][poolIds[poolIndex]][
-                    rewardIds[poolIndex][rewardIndex]
-                ] = amounts[poolIndex][rewardIndex];
-            }
-        }
     }
 
     function _isActiveStaker(
