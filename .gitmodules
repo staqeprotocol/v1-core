@@ -7,3 +7,6 @@
 [submodule "lib/contracts"]
 	path = lib/contracts
 	url = https://github.com/toqenfactory/contracts
+[submodule "lib/v1-core"]
+	path = lib/v1-core
+	url = https://github.com/qrosschain/v1-core
