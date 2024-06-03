@@ -6,17 +6,17 @@
 
 ## Overview
 
-Staqe is a comprehensive staking platform built on Ethereum, allowing users to stake ERC20 and ERC721 tokens. It offers a versatile environment where users can participate in various staking pools, earn rewards, and even create their own pools if they possess a Genesis NFT. This contract enables dynamic staking pool creation, management, and interaction, with each pool having its distinct settings and reward mechanisms.
+Staqe is a comprehensive staking platform built on Ethereum, enabling users to stake ERC20 and ERC721 tokens. It offers a versatile environment where users can participate in various staking pools, earn rewards, and even create their own pools if they possess a Genesis NFT. This contract allows dynamic staking pool creation, management, and interaction, with each pool featuring distinct settings and reward mechanisms. Additionally, the platform supports cross-chain reward claims using Chainlink's CCIP for ERC20Q tokens.
 
 ## Features
 
 - **ERC20 and ERC721 Token Staking**: Users can stake both types of tokens in designated pools.
 - **Genesis Pool**: Stake in the Genesis pool to gain the ability to create new pools.
 - **Pool Creation**: Users can launch new pools, defining the staking and reward tokens, maximum stake limits, and other configurations.
-- **Reward System**: Pool owners can add rewards to incentivize staking, with detailed mechanisms for reward distribution.
+- **Reward System**: Pool owners can add rewards to incentivize staking, with detailed mechanisms for reward distribution, including cross-chain rewards via Chainlink CCIP.
 - **Ownership and Transferability**: Each pool is an ERC721 token itself, allowing for ownership transfer and pool trading.
 - **Flexible Staking/Unstaking**: Users have the freedom to stake and unstake tokens anytime without penalties.
-- **Claim Rewards**: Stakers can claim their due rewards from pools they've participated in.
+- **Claim Rewards**: Stakers can claim their due rewards from pools they've participated in, with support for cross-chain reward claims.
 
 ## Contract Interactions
 
@@ -38,7 +38,7 @@ Tokens can be unstaked at any time using the `unstake` function, which requires 
 
 ### Claiming Rewards
 
-Users claim their rewards using the `claimRewards` function, specifying the pools and reward IDs they wish to claim.
+Users claim their rewards using the `claimRewards` function, specifying the pools and reward IDs they wish to claim. This function supports cross-chain reward claims using Chainlink's CCIP for ERC20Q tokens, allowing users to claim rewards across different blockchain networks.
 
 ## Dev
 

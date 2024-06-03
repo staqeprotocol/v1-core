@@ -5,6 +5,7 @@ pragma abicoder v2;
 import {Staqe, IERC20, IERC721} from "@staqeprotocol/v1-core/contracts/Staqe.sol";
 import {StaqeDetails} from "@staqeprotocol/v1-core/contracts/extensions/StaqeDetails.sol";
 import {StaqePermit} from "@staqeprotocol/v1-core/contracts/extensions/StaqePermit.sol";
+import {StaqeQross} from "@staqeprotocol/v1-core/contracts/extensions/StaqeQross.sol";
 
 /**
  *       _                                     _                  _
@@ -14,7 +15,7 @@ import {StaqePermit} from "@staqeprotocol/v1-core/contracts/extensions/StaqePerm
  *  |___/\__\__,_|\__, |\___| | .__/|_|  \___/ \__\___/ \___\___/|_|
  *                   |_|      |_|
  */
-contract StaqeProtocol is Staqe, StaqeDetails, StaqePermit {
+contract StaqeProtocol is Staqe, StaqeDetails, StaqePermit, StaqeQross {
     constructor(
         IERC20 stakeERC20,
         IERC721 stakeERC721,
